@@ -6,3 +6,5 @@ secrets.yaml
 *.db-wal
 *.log
 home-assistant.log.*
+# not syncing the custom_components folder to GitHub.
+custom_components/
