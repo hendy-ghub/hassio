@@ -1,0 +1,231 @@
+- id: '1709376974381'
+  name: House Lights
+  entities:
+    light.master_bedroom_light_1:
+      min_color_temp_kelvin: 1500
+      max_color_temp_kelvin: 9000
+      min_mireds: 111
+      max_mireds: 666
+      effect_list:
+      - effect_pulse
+      - effect_stop
+      supported_color_modes:
+      - color_temp
+      effect:
+      color_mode:
+      brightness:
+      color_temp_kelvin:
+      color_temp:
+      hs_color:
+      rgb_color:
+      xy_color:
+      friendly_name: Master Bedroom Light 1
+      supported_features: 36
+      state: 'off'
+    light.master_bedroom_light_2:
+      min_color_temp_kelvin: 1500
+      max_color_temp_kelvin: 9000
+      min_mireds: 111
+      max_mireds: 666
+      effect_list:
+      - effect_pulse
+      - effect_stop
+      supported_color_modes:
+      - color_temp
+      effect:
+      color_mode:
+      brightness:
+      color_temp_kelvin:
+      color_temp:
+      hs_color:
+      rgb_color:
+      xy_color:
+      friendly_name: Master Bedroom Light 2
+      supported_features: 36
+      state: 'off'
+    light.guest_bedroom_light_1:
+      min_color_temp_kelvin: 1500
+      max_color_temp_kelvin: 9000
+      min_mireds: 111
+      max_mireds: 666
+      effect_list:
+      - effect_pulse
+      - effect_stop
+      supported_color_modes:
+      - color_temp
+      effect:
+      color_mode:
+      brightness:
+      color_temp_kelvin:
+      color_temp:
+      hs_color:
+      rgb_color:
+      xy_color:
+      friendly_name: Guest Bedroom Light 1
+      supported_features: 36
+      state: 'off'
+    light.guest_bedroom_light_2:
+      min_color_temp_kelvin: 1500
+      max_color_temp_kelvin: 9000
+      min_mireds: 111
+      max_mireds: 666
+      effect_list:
+      - effect_pulse
+      - effect_stop
+      supported_color_modes:
+      - color_temp
+      effect:
+      color_mode:
+      brightness:
+      color_temp_kelvin:
+      color_temp:
+      hs_color:
+      rgb_color:
+      xy_color:
+      friendly_name: Guest Bedroom Light 2
+      supported_features: 36
+      state: 'off'
+    light.living_room_light:
+      min_color_temp_kelvin: 1500
+      max_color_temp_kelvin: 9000
+      min_mireds: 111
+      max_mireds: 666
+      effect_list:
+      - effect_colorloop
+      - effect_pulse
+      - effect_stop
+      supported_color_modes:
+      - color_temp
+      - hs
+      effect:
+      color_mode: color_temp
+      brightness: 12
+      color_temp_kelvin: 3500
+      color_temp: 285
+      hs_color:
+      - 27.173
+      - 44.774
+      rgb_color:
+      - 255
+      - 192
+      - 140
+      xy_color:
+      - 0.455
+      - 0.374
+      friendly_name: Living Room Light
+      supported_features: 36
+      state: 'on'
+    light.downstairs_living_room_light:
+      min_color_temp_kelvin: 1500
+      max_color_temp_kelvin: 9000
+      min_mireds: 111
+      max_mireds: 666
+      effect_list:
+      - effect_pulse
+      - effect_stop
+      supported_color_modes:
+      - color_temp
+      effect:
+      color_mode: color_temp
+      brightness: 12
+      color_temp_kelvin: 3500
+      color_temp: 285
+      hs_color:
+      - 27.173
+      - 44.774
+      rgb_color:
+      - 255
+      - 192
+      - 140
+      xy_color:
+      - 0.455
+      - 0.374
+      friendly_name: Downstairs Living Room Light
+      supported_features: 36
+      state: 'on'
+    light.home_office_light:
+      min_color_temp_kelvin: 1500
+      max_color_temp_kelvin: 9000
+      min_mireds: 111
+      max_mireds: 666
+      effect_list:
+      - effect_colorloop
+      - effect_pulse
+      - effect_stop
+      supported_color_modes:
+      - color_temp
+      - hs
+      effect:
+      color_mode:
+      brightness:
+      color_temp_kelvin:
+      color_temp:
+      hs_color:
+      rgb_color:
+      xy_color:
+      friendly_name: Home Office Light
+      supported_features: 36
+      state: 'off'
+    light.kids_room_light:
+      min_color_temp_kelvin: 2500
+      max_color_temp_kelvin: 9000
+      min_mireds: 111
+      max_mireds: 400
+      effect_list:
+      - effect_colorloop
+      - effect_pulse
+      - effect_stop
+      supported_color_modes:
+      - color_temp
+      - hs
+      effect:
+      color_mode: color_temp
+      brightness: 8
+      color_temp_kelvin: 3500
+      color_temp: 285
+      hs_color:
+      - 27.173
+      - 44.774
+      rgb_color:
+      - 255
+      - 192
+      - 140
+      xy_color:
+      - 0.455
+      - 0.374
+      friendly_name: Kids Room Light
+      supported_features: 36
+      state: 'on'
+    light.tv_led_strip:
+      min_color_temp_kelvin: 1500
+      max_color_temp_kelvin: 9000
+      min_mireds: 111
+      max_mireds: 666
+      effect_list:
+      - effect_colorloop
+      - effect_pulse
+      - effect_move
+      - effect_stop
+      supported_color_modes:
+      - color_temp
+      - hs
+      effect:
+      color_mode: hs
+      brightness: 12
+      color_temp_kelvin:
+      color_temp:
+      hs_color:
+      - 281.996
+      - 100
+      rgb_color:
+      - 178
+      - 0
+      - 255
+      xy_color:
+      - 0.283
+      - 0.108
+      friendly_name: TV LED Strip
+      supported_features: 36
+      state: 'on'
+  icon: mdi:lamps
+  metadata: {}

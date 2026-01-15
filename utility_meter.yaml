@@ -1,0 +1,79 @@
+    daily_electricity_tou_tariff:
+      source: sensor.powerwall_site_import
+      cycle: daily
+      tariffs:
+        - peak
+        - offpeak
+        - super_offpeak
+        - ev_charging
+
+    # Hourly energy    
+    hourly_energy_from_solar:
+      source: sensor.integrated_energy_from_solar
+      cycle: hourly
+    
+    hourly_energy_from_battery:
+      source: sensor.integrated_energy_from_battery
+      cycle: hourly
+    
+    hourly_energy_from_grid:
+      source: sensor.integrated_energy_from_grid
+      cycle: hourly
+      
+    hourly_energy_exported_to_grid:
+      source: sensor.powerwall_site_export
+      cycle: hourly
+
+    # Daily energy    
+    daily_energy_from_solar:
+      source: sensor.integrated_energy_from_solar
+      cycle: daily
+    
+    daily_energy_from_battery:
+      source: sensor.integrated_energy_from_battery
+      cycle: daily
+    
+    daily_energy_from_grid:
+      source: sensor.integrated_energy_from_grid
+      cycle: daily
+    
+    daily_solar_export:
+      source: sensor.powerwall_solar_export
+      cycle: daily
+
+    daily_energy_exported_to_grid:
+      source: sensor.powerwall_site_export
+      cycle: daily
+
+    # Daily energy ex-EV
+    daily_energy_from_solar_excl_ev:
+      source: sensor.integrated_energy_from_solar_excl_ev
+      cycle: daily
+    
+    daily_energy_from_battery_excl_ev:
+      source: sensor.integrated_energy_from_battery_excl_ev
+      cycle: daily
+    
+    daily_energy_from_grid_excl_ev:
+      source: sensor.integrated_energy_from_grid_excl_ev
+      cycle: daily
+    
+    daily_tesla_charging_energy:
+      source: sensor.integrated_tesla_charging_energy
+      cycle: daily
+      
+    daily_ev_from_grid:
+      source: sensor.integrated_ev_charging_from_grid
+      cycle: daily
+    
+    daily_ev_from_solar:
+      source: sensor.integrated_ev_charging_from_solar
+      cycle: daily
+    
+    daily_ev_from_battery:
+      source: sensor.integrated_ev_charging_from_battery
+      cycle: daily
+      
+    daily_net_electricity_cost:
+      source: sensor.hourly_net_electricity_cost
+      cycle: daily

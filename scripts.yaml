@@ -1,0 +1,159 @@
+turn_kids_room_light_down:
+  alias: Turn Down Lights - Kids, Master Bedroom
+  sequence:
+  - service: light.turn_on
+    data:
+      brightness_pct: 3
+    target:
+      device_id: 30e2c120681f8b8f5c22043e7c7691b4
+  - service: light.turn_off
+    data: {}
+    target:
+      device_id:
+      - d297842a83d004f9b5b07630bc0a32d3
+      - e475f2b7921075ea4c92d9f2d922b098
+  mode: single
+  icon: mdi:lamps
+set_tesla_poll_short:
+  alias: Set Tesla Poll Short
+  sequence:
+  - service: tesla_custom.polling_interval
+    data:
+      scan_interval: 5
+      vin: LRWYHCFS0NC406417
+  mode: single
+  icon: mdi:car-connected
+google_assistant_broadcast_test:
+  alias: 'Google Assistant: Broadcast Test'
+  sequence:
+  - service: notify.google_assistant_sdk
+    data:
+      message: Broadcast this is a test
+  mode: single
+  icon: mdi:google-assistant
+turn_off_lights_all_lights:
+  alias: Turn Off Lights - All Lights
+  sequence:
+  - target:
+      device_id:
+      - 30e2c120681f8b8f5c22043e7c7691b4
+      - 04aa0e9cc5895ef29667d26f21be8a4d
+      - d5de814f87a7d6bf9cfdb049d12a584b
+      - d297842a83d004f9b5b07630bc0a32d3
+      - e475f2b7921075ea4c92d9f2d922b098
+      - 7327b44eed184ace62b9f52e6dadfdcc
+      - 228c93051a219aea99f3c964d6922d13
+      - 0e5b105dbeed9ae9975a68fc80278dfb
+      - 7110fc54647eb1bfef31c7f8f396b67b
+      - 32b4041ea305a17ce44bd5da68792b59
+      - 47bef9a46e8519ee5698909f7a73c50d
+      - 84f40fa297a4423ab0b753b60edeee8d
+      - 6c13cc95ed4fdc9c3e16c317a28cde51
+      - 507b986580ddcee03db982c054a79964
+    data: {}
+    action: light.turn_off
+  mode: single
+  icon: mdi:lamps
+'1709457190585':
+  alias: Turn On Lights - Kids, Master Bedroom
+  sequence:
+  - service: light.turn_on
+    data:
+      transition: 15
+      brightness_pct: 90
+    target:
+      device_id: 30e2c120681f8b8f5c22043e7c7691b4
+  - service: light.turn_on
+    target:
+      device_id:
+      - d297842a83d004f9b5b07630bc0a32d3
+      - e475f2b7921075ea4c92d9f2d922b098
+    data:
+      transition: 15
+      brightness_pct: 90
+  mode: single
+  icon: mdi:lamps
+turn_on_lights_living_room_d_s_living_room_tv_led_strip:
+  alias: Turn On Lights - Living Room, D/S Living Room, TV LED Strip
+  sequence:
+  - service: light.turn_on
+    data:
+      transition: 15
+      brightness_pct: 5
+    target:
+      device_id:
+      - 9fe7de715c20ac2e558940d75e3e422f
+      - 228c93051a219aea99f3c964d6922d13
+  - service: light.turn_on
+    data:
+      transition: 15
+      brightness_pct: 15
+    target:
+      device_id: 0e5b105dbeed9ae9975a68fc80278dfb
+  mode: single
+  icon: mdi:lamps
+send_notification_to_phone:
+  alias: Send notification to phone
+  icon: mdi:cellphone-information
+  mode: single
+  fields:
+    title:
+      selector:
+        text:
+      name: Title
+      description: Title of the notification
+    message:
+      selector:
+        text:
+      name: Message
+      description: Main notification message
+  sequence:
+  - action: notify.mobile_app_pixel_10_pro
+    data:
+      title: '{{ title }}'
+      message: '{{ message }}'
+  - action: notify.mobile_app_hendys_iphone
+    data:
+      title: '{{ title }}'
+      message: '{{ message }}'
+  - action: notify.mobile_app_hendys_ipad
+    data:
+      title: '{{ title }}'
+      message: '{{ message }}'
+activate_tesla_morning_mode:
+  alias: Activate Tesla Camp Mode
+  sequence:
+  - device_id: 13b42e242e0cf46971e3069856add3b8
+    domain: lock
+    entity_id: bfc617d19d4635dc7c2d6d8c692ed98b
+    type: unlock
+  - device_id: 13b42e242e0cf46971e3069856add3b8
+    domain: climate
+    entity_id: c97b3f9f1bff4d2dadd91847449d7bcb
+    type: set_hvac_mode
+    hvac_mode: heat_cool
+  - device_id: 13b42e242e0cf46971e3069856add3b8
+    domain: climate
+    entity_id: c97b3f9f1bff4d2dadd91847449d7bcb
+    type: set_preset_mode
+    preset_mode: camp
+  mode: single
+  icon: phu:tesla-defrost
+activate_sentry_mode_wake:
+  alias: Activate Sentry Mode (Wake)
+  sequence:
+  - device_id: 13b42e242e0cf46971e3069856add3b8
+    domain: button
+    entity_id: 50ee710822a32a105687984460424228
+    type: press
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 30
+      milliseconds: 0
+  - type: turn_on
+    device_id: 13b42e242e0cf46971e3069856add3b8
+    entity_id: 36e4e4b0542cb0e1d9f0d8eb6caf1a45
+    domain: switch
+  mode: single
+  icon: phu:tesla-sentry

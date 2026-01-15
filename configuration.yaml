@@ -1,0 +1,1316 @@
+# Configure a default setup of Home Assistant (frontend, api, etc)
+
+default_config:
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+light: !include lights.yaml
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+utility_meter: !include utility_meter.yaml
+rest: !include rests.yaml
+
+zha:
+  custom_quirks_path: /config/custom_zha_quirks/
+
+mqtt:
+  sensor: !include mqtt_sensor.yaml
+  binary_sensor: !include mqtt_binary_sensor.yaml
+
+homeassistant:
+  customize:
+    # Add an entry for each entity that you want to overwrite.
+    device_tracker.tesla_location:
+      friendly_name: Baymax
+
+    # Manual fix for sensors missing state_class after 2026.1.0 update
+    sensor.home_weather_station_hourly_rain_rate:
+      state_class: measurement
+    sensor.home_weather_station_24h_rain:
+      state_class: total_increasing
+    sensor.home_weather_station_hourly_rain_rate_piezo:
+      state_class: measurement
+    sensor.home_weather_station_24h_rain_piezo:
+      state_class: total_increasing
+
+recorder:
+  purge_keep_days: 30       # You have the space, keep a full month of raw data
+  commit_interval: 30       # Buffer writes to maximize NVMe lifespan
+  auto_purge: true
+  auto_repack: true         # Critical for keeping the large file optimized
+  exclude:
+    entity_globs:
+      # 1. Collapse all Video Queues (Frontyard, Backyard, etc.)
+      - sensor.*_video_queue_size
+      # 2. Collapse all System Uptimes (UniFi, Dream Machine, TrueNAS)
+      - sensor.*_uptime
+      - sensor.ups*_runtime_friendly
+      # 3. Collapse Personal Tracking/Device metadata
+      - sensor.*_next_update
+      - sensor.*iphone*_last_located
+      - sensor.*hendy*
+      - sensor.bloodlustedpeon*
+      - binary_sensor.bloodlustedpeon*
+      - sensor.idiot*
+      - sensor.qbittorrent*
+      # 4. Collapse Integration-specific noise
+      - sensor.baymax_*
+      - sensor.camera_*
+      - binary_sensor.truenas_apps_*
+      - automation.home_assistant_switch_*
+      - button.tv_led_strip_*
+    entities:
+      - sensor.date
+      - sensor.time
+      - automation.restart_tuya
+      - automation.update_tesla_location_as_mqtt_location_updates
+      - select.tv_led_strip_theme
+      - switch.kettle_socket_1
+      - switch.downstairs_fridge_power # Specify if you want to keep energy but hide state
+
+logbook:
+  exclude:
+    entities:
+      - sensor.date
+      - sensor.time
+      - automation.restart_tuya
+      - device_tracker.sf6e683c6ab67dbc6c_023b
+    entity_globs:
+      - sensor.*_next_update
+      - sensor.*iphone*_last_located
+      - sensor.ups*_runtime_friendly
+      - sensor.unifi_*_uptime
+      - sensor.dream_machine_pro_uptime
+      - sensor.truenas_system_uptime
+      - sensor.baymax_*
+      - sensor.camera_*
+      - sensor.watchman_last_updated
+      - sensor.frontyard_video_queue_size
+      - sensor.backyard_video_queue_size
+      - sensor.doorbell_video_queue_size
+      - sensor.living_room_video_queue_size
+      - sensor.rear_entryway_video_queue_size
+      - binary_sensor.*_presence_sensor_occupancy
+      - binary_sensor.bloodlustedpeon*
+      - binary_sensor.truenas_apps_*
+      - sensor.bloodlustedpeon*
+      - sensor.qbittorrent*
+      - sensor.idiot*
+      - sensor.hendy*
+      - sensor.home_hendy_ongkodjojo_*
+      - select.tv_led_strip_theme
+      - switch.kettle_socket_1
+      - switch.downstairs_fridge*
+      - select.kettle_power_on_behavior
+      - sensor.kettle_power_on_behavior
+      - button.tv_led_strip_*
+      - automation.home_assistant_switch_*
+      - automation.update_tesla_location_as_mqtt_location_updates
+
+influxdb:
+  host: 192.168.85.10
+  port: 8086
+  ssl: false
+  verify_ssl: false
+  database: hassio
+  username: hassio
+  password: !secret influxdb_pass
+  max_retries: 3
+  measurement_attr: entity_id
+
+  include:
+    domains:
+      - sensor
+      - device_tracker
+
+wake_on_lan: # enables `wake_on_lan` integration
+
+frontend:
+  extra_module_url: /hacsfiles/lovelace-card-mod/card-mod.js
+
+switch:
+  - platform: wake_on_lan
+    name: "Wake Up TV"
+    mac: "58:FD:B1:94:C4:14"
+    host: 192.168.84.155
+    broadcast_address: 192.168.84.255  # corrected to proper subnet broadcast
+    turn_off:
+      service: media_player.turn_off
+      data:
+        entity_id: media_player.living_room_tv_2
+    
+smartir: 
+    
+climate:
+  - platform: smartir
+    name: "Guest Bedroom AC"
+    unique_id: guest_bedroom_ac
+    device_code: 1101
+    controller_data: remote.broadlink_rm4_mini_guest_bedroom
+    temperature_sensor: sensor.guest_bedroom_temperature
+    humidity_sensor: sensor.guest_bedroom_humidity
+    power_sensor: sensor.split_air_con_power_guest_bedroom
+
+  - platform: smartir
+    name: "Home Office AC"
+    unique_id: home_office_ac
+    device_code: 1101
+    controller_data: remote.broadlink_rm4_mini_home_office
+    temperature_sensor: sensor.home_office_temperature
+    humidity_sensor: sensor.home_office_humidity
+    power_sensor: sensor.split_air_con_power_home_office
+
+input_boolean:
+  downstairs_ac_master:
+    name: Downstairs AC Master Switch
+
+input_datetime:
+  downstairs_ac_on_time:
+    name: Downstairs AC “On” Time
+    has_date: false
+    has_time: true
+
+  downstairs_ac_off_time:
+    name: Downstairs AC “Off” Time
+    has_date: false
+    has_time: true
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 192.168.86.0/24
+    - 172.30.33.0/24
+
+logger:
+  default: info
+  logs:
+    tuya_iot: error
+
+input_number:
+  estimated_energy_value_from_solar:
+    name: Estimated Energy Value from Solar
+    min: 0
+    max: 1000
+    step: 0.01
+    unit_of_measurement: '$'
+    mode: box
+
+  estimated_energy_value_from_battery:
+    name: Estimated Energy Value from Battery
+    min: 0
+    max: 1000
+    step: 0.01
+    unit_of_measurement: '$'
+    mode: box
+
+  estimated_energy_value_from_grid:
+    name: Estimated Energy Value from Grid
+    min: 0
+    max: 1000
+    step: 0.01
+    unit_of_measurement: '$'
+    mode: box
+
+  estimated_energy_value_today:
+    name: Estimated Energy Value Total Today
+    min: 0
+    max: 3000
+    step: 0.01
+    unit_of_measurement: '$'
+    mode: box
+    
+  estimated_energy_value_from_export:
+    name: Estimated Energy Value from Export
+    min: 0
+    max: 1000
+    step: 0.01
+    unit_of_measurement: '$'
+    mode: box
+
+template:
+ # calendar sensors
+
+    # Electricy Tariff Sensors
+    
+    # Peak: 3pm to 9pm everyday from 1 November to 31 March (Summer Months), 1 June to 31 August (Winter Months) and 3pm to 9pm on weekends during April, May, September and October
+    # EV Charging: Midnight to 6am everyday
+    # Super Off Peak: 11am to 2pm everyday
+    # Off Peak: All other times
+    
+  - sensor:
+      - name: "OVO Energy Tariff Solar Export"
+        unique_id: "ovo_ev_plan_nsw_solar"
+        unit_of_measurement: "AUD/kWh"
+        state: "0.028"
+  - sensor:
+      - name: "OVO Energy EV Tariff"
+        unique_id: "ev_ovo_nsw"
+        unit_of_measurement: "AUD/kWh"
+        state: >
+          {% set tariff = {
+              "Peak": 0.5885,
+              "OffPeak": 0.3916,
+              "EVOffPeak": 0.08,
+              "SuperOffPeak": 0.0
+          } %}
+
+          {% set month = now().month %}
+          {% set hour = now().hour %}
+
+          {% set is_peak_month = month in [11, 12, 1, 2, 3, 6, 7, 8] %}
+          {% set is_peak_hour = 15 <= hour < 21 %}
+          {% set is_super_off_peak = 11 <= hour < 14 %}
+          {% set is_ev_off_peak = 0 <= hour < 6 %}
+
+          {% if is_ev_off_peak %}
+            {{ tariff.EVOffPeak }}
+          {% elif is_super_off_peak %}
+            {{ tariff.SuperOffPeak }}
+          {% elif is_peak_month and is_peak_hour %}
+            {{ tariff.Peak }}
+          {% else %}
+            {{ tariff.OffPeak }}
+          {% endif %}
+          
+  - binary_sensor:
+      - name: "Is EV Charging Time"
+        unique_id: "is_ev_charging_time"
+        state: >
+          {% set hour = now().hour %}
+          {{ 0 <= hour < 6 }}
+
+      - name: "Is Super Off Peak Time"
+        unique_id: "is_super_offpeak_time"
+        state: >
+          {% set hour = now().hour %}
+          {{ 11 <= hour < 14 }}
+
+      - name: "Is Peak Time"
+        unique_id: "is_peak_time"
+        state: >
+          {% set month = now().month %}
+          {% set hour = now().hour %}
+          {% set is_peak_month = month in [11,12,1,2,3,6,7,8] %}
+          {{ is_peak_month and 15 <= hour < 21 }}
+
+      - name: "Is Off Peak Time"
+        unique_id: "is_offpeak_time"
+        state: >
+          {% set hour = now().hour %}
+          {% set month = now().month %}
+          {% set is_peak_month = month in [11,12,1,2,3,6,7,8] %}
+          {{ not (0 <= hour < 6 or 11 <= hour < 14 or (is_peak_month and 15 <= hour < 21)) }}
+          
+  - sensor:
+    - name: "Powershop EV Tariff"
+      unique_id: "ev_powershop_nsw"
+      unit_of_measurement: "AUD/kWh"
+      state: >
+        {% set tariff = {
+            "Peak": 0.462,
+            "Shoulder": 0.2376,
+            "OffPeak": 0.2376,
+            "SuperOffPeak": 0.0
+        } %}
+
+        {% set hour = now().hour %}
+        {% set minute = now().minute %}
+        {% set time = hour * 60 + minute %}
+        {% set weekday = now().weekday() %}  {# 0 = Monday, 6 = Sunday #}
+
+        {% if time < 420 %}
+          {{ tariff.OffPeak }}
+        {% elif time < 720 %}
+          {{ tariff.Shoulder }}
+        {% elif time < 840 %}
+          {{ tariff.SuperOffPeak }}
+        {% elif weekday < 5 %}
+          {% if time < 1200 %}
+            {{ tariff.Peak }}
+          {% elif time < 1320 %}
+            {{ tariff.Shoulder }}
+          {% else %}
+            {{ tariff.OffPeak }}
+          {% endif %}
+        {% else %}
+          {% if time < 1320 %}
+            {{ tariff.Shoulder }}
+          {% else %}
+            {{ tariff.OffPeak }}
+          {% endif %}
+        {% endif %}
+  - sensor:
+    - name: "Powershop EV Tariff Solar Export"
+      unique_id: "ev_powershop_nsw_solar"
+      unit_of_measurement: "AUD/kWh"
+      state: "0.014"
+
+  - sensor:
+      #–– 1. Split live power into import vs export ––
+      - name: "Grid Import Power"
+        state: >
+          {% set p = states('sensor.powerwall_site_now') | float(0) %}
+          {{ p if p > 0 else 0 }}
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+
+      - name: "Grid Export Power"
+        state: >
+          {% set p = states('sensor.powerwall_site_now') | float(0) %}
+          {{ (-p) if p < 0 else 0 }}
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+
+      #–– 2. Hourly net‐cost – uses your newly integrated sensors plus TOU rate sensor ––
+  - sensor:
+      - name: "Hourly Net Electricity Cost"
+        unique_id: hourly_net_electricity_cost
+        device_class: monetary
+        unit_of_measurement: "$"
+        # state_class is not supported here — remove it
+        state: >
+          {% set imp = states('sensor.hourly_energy_from_grid') | float(0) %}
+          {% set rate_i = states('sensor.ev_ovo_nsw') | float(0) / 100 %}
+          {% set exp = states('sensor.hourly_energy_exported_to_grid') | float(0) %}
+          {% set rate_e = states('sensor.ovo_ev_plan_nsw_solar') | float(0) / 100 %}
+          {{ ((imp * rate_i) - (exp * rate_e)) | round(2) }}
+
+  - sensor:
+      - name: "Daily Net Electricity Cost"
+        unique_id: daily_net_electricity_cost
+        device_class: monetary
+        unit_of_measurement: "$"
+        state: >
+          {% set total = states('sensor.daily_cost_meter') | float(0) %}
+          {{ (total + 105.6/100) | round(2) }}
+          
+  - sensor:
+    - name: "Solar FIT Value"
+      unique_id: "solar_fit_value"
+      unit_of_measurement: "$"
+      device_class: monetary
+      state_class: total
+      state: >
+        {% set solar_kwh = states('sensor.solar_generation') | float(0) %}
+        {% set export_rate = states('sensor.ovo_ev_plan_nsw_solar') | float(0) %}
+        {{ (solar_kwh * export_rate) | round(2) }}
+      attributes:
+        solar_kwh: "{{ states('sensor.solar_generation') }}"
+        export_rate_aud_per_kwh: "{{ states('sensor.ovo_ev_plan_nsw_solar') }}"
+
+  - sensor:
+      - name: "Estimated Energy Value"
+        unique_id: estimated_energy_value_sensor
+        unit_of_measurement: "$"
+        device_class: monetary
+        state_class: total
+        state: "{{ states('input_number.estimated_energy_value_today') | float(0) }}"
+
+# Sensors for home power attribution
+  - sensor:
+    - name: "General Household Load"
+      unit_of_measurement: "kW"
+      device_class: power
+      state_class: measurement
+      state: >
+        {% set total = states('sensor.powerwall_load_now') | float(0) %}
+        {% set ev = states('sensor.tesla_wall_connector_power') | float(0) %}
+        {{ [total - ev, 0] | max | round(3) }}
+
+  - sensor:
+      - name: "Power from Grid to Home"
+        unique_id: power_from_grid_to_home
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set load = states('sensor.powerwall_load_now') | float(0) %}
+          {% set solar = states('sensor.power_from_solar_to_home') | float(0) %}
+          {% set battery = states('sensor.power_from_battery_to_home') | float(0) %}
+          {% set grid_to_home = load - solar - battery %}
+          {{ [grid_to_home, 0] | max | round(3) }}
+
+      - name: "Power from Battery to Home"
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set battery = states('sensor.powerwall_battery_now') | float(0) %}
+          {% if battery > 0 %}
+            {{ battery }}
+          {% else %}
+            0
+          {% endif %}
+
+      - name: "Power from Solar to Home"
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set solar = states('sensor.powerwall_solar_now') | float(0) %}
+          {% set battery = states('sensor.powerwall_battery_now') | float(0) %}
+          {% set site = states('sensor.powerwall_site_now') | float(0) %}
+          {% set export = -site if site < 0 else 0 %}
+          {% set solar_to_battery = -battery if battery < 0 else 0 %}
+          {% set solar_to_grid = export %}
+          {% set solar_used_elsewhere = solar_to_battery + solar_to_grid %}
+          {% set solar_to_home = solar - solar_used_elsewhere %}
+          {{ [solar_to_home, 0] | max | round(3) }}
+
+# Power to Home (Excl. EV Charging) 
+  - sensor:
+      # 1) General Household Load (now with unit conversion)
+      - name: "General Household Load (Excl. EV)"
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set total = states('sensor.powerwall_load_now')                | float(0) %}
+          {% set ev_w  = states('sensor.tesla_wall_connector_power')      | float(0) %}
+          {% set ev    = ev_w / 1000  %}   {# convert W → kW #}
+          {{ [ total - ev, 0 ] | max | round(3) }}
+
+      # 2) Solar → Home (Excl. EV)
+      - name: "Power from Solar to Home (Excl. EV)"
+        unique_id: power_from_solar_to_home_excl_ev
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set total     = states('sensor.powerwall_load_now')           | float(0) %}
+          {% set ev_w      = states('sensor.tesla_wall_connector_power')  | float(0) %}
+          {% set ev        = ev_w / 1000 %}
+          {% set general   = [ total - ev, 0 ] | max %}
+          {% set solar     = states('sensor.power_from_solar_to_home')    | float(0) %}
+          {% set share     = (solar / total) if total > 0 else 0 %}
+          {{ (general * share) | round(3) }}
+
+      # 3) Battery → Home (Excl. EV)
+      - name: "Power from Battery to Home (Excl. EV)"
+        unique_id: power_from_battery_to_home_excl_ev
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set total     = states('sensor.powerwall_load_now')             | float(0) %}
+          {% set ev_w      = states('sensor.tesla_wall_connector_power')    | float(0) %}
+          {% set ev        = ev_w / 1000 %}
+          {% set general   = [ total - ev, 0 ] | max %}
+          {% set battery   = states('sensor.power_from_battery_to_home')    | float(0) %}
+          {% set share     = (battery / total) if total > 0 else 0 %}
+          {{ (general * share) | round(3) }}
+
+      # 4) Grid → Home (Excl. EV)
+      - name: "Power from Grid to Home (Excl. EV)"
+        unique_id: power_from_grid_to_home_excl_ev
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set general   = states('sensor.general_household_load')             | float(0) %}
+          {% set solar_ex  = states('sensor.power_from_solar_to_home_excl_ev')   | float(0) %}
+          {% set batt_ex   = states('sensor.power_from_battery_to_home_excl_ev') | float(0) %}
+          {{ [ general - solar_ex - batt_ex, 0 ] | max | round(3) }}
+
+  - sensor:
+      - name: "Powerwall Solar Export"
+        unit_of_measurement: "kW"
+        state: >
+          {% set site = states('sensor.powerwall_site_now') | float(0) %}
+          {% if site < 0 %}
+            {{ -site }}
+          {% else %}
+            0
+          {% endif %}
+
+  - sensor:
+      - name: "Solar Share"
+        unit_of_measurement: "%"
+        state: >
+          {% set solar = states('sensor.daily_energy_from_solar') | float(0) %}
+          {% set battery = states('sensor.daily_energy_from_battery') | float(0) %}
+          {% set grid = states('sensor.daily_energy_from_grid') | float(0) %}
+          {% set total = solar + battery + grid %}
+          {% if total > 0 %}
+            {{ (solar / total * 100) | round(1) }}
+          {% else %}
+            0
+          {% endif %}
+
+      - name: "Battery Share"
+        unit_of_measurement: "%"
+        state: >
+          {% set solar = states('sensor.daily_energy_from_solar') | float(0) %}
+          {% set battery = states('sensor.daily_energy_from_battery') | float(0) %}
+          {% set grid = states('sensor.daily_energy_from_grid') | float(0) %}
+          {% set total = solar + battery + grid %}
+          {% if total > 0 %}
+            {{ (battery / total * 100) | round(1) }}
+          {% else %}
+            0
+          {% endif %}
+
+      - name: "Grid Share"
+        unit_of_measurement: "%"
+        state: >
+          {% set solar = states('sensor.daily_energy_from_solar') | float(0) %}
+          {% set battery = states('sensor.daily_energy_from_battery') | float(0) %}
+          {% set grid = states('sensor.daily_energy_from_grid') | float(0) %}
+          {% set total = solar + battery + grid %}
+          {% if total > 0 %}
+            {{ (grid / total * 100) | round(1) }}
+          {% else %}
+            0
+          {% endif %}
+
+  - sensor:
+      - name: "Self Powered Percentage"
+        unique_id: self_powered_percentage
+        unit_of_measurement: "%"
+        state_class: measurement
+        state: >
+          {% set solar = states('sensor.daily_energy_from_solar') | float(0) %}
+          {% set battery = states('sensor.daily_energy_from_battery') | float(0) %}
+          {% set grid = states('sensor.daily_energy_from_grid') | float(0) %}
+          {% set total = solar + battery + grid %}
+          {% if total > 0 %}
+            {{ ((solar + battery) / total * 100) | round(1) }}
+          {% else %}
+            0
+          {% endif %}
+
+# Weather related sensors
+  - sensor:
+      - name: "Outdoor AQI"
+        unique_id: outdoor_aqi
+        state: >
+          {% set pm25 = states('sensor.air_quality_sensor_pm2_5')|float(0) %}
+          {% macro calcAQI(Cp, Ih, Il, BPh, BPl) -%}
+            {{ (((Ih - Il)/(BPh - BPl)) * (Cp - BPl) + Il)|round }}
+          {%- endmacro %}
+          {% if pm25 > 1000 %}
+            {{ none }}
+          {% elif pm25 > 350.5 %}
+            {{ calcAQI(pm25, 500.0, 401.0, 500.0, 350.5) }}
+          {% elif pm25 > 250.5 %}
+            {{ calcAQI(pm25, 400.0, 301.0, 350.4, 250.5) }}
+          {% elif pm25 > 150.5 %}
+            {{ calcAQI(pm25, 300.0, 201.0, 250.4, 150.5) }}
+          {% elif pm25 > 55.5 %}
+            {{ calcAQI(pm25, 200.0, 151.0, 150.4, 55.5) }}
+          {% elif pm25 > 35.5 %}
+            {{ calcAQI(pm25, 150.0, 101.0, 55.4, 35.5) }}
+          {% elif pm25 > 12.1 %}
+            {{ calcAQI(pm25, 100.0, 51.0, 35.4, 12.1) }}
+          {% elif pm25 >= 0.0 %}
+            {{ calcAQI(pm25, 50.0, 0.0, 12.0, 0.0) }}
+          {% else %}
+            {{ none }}
+          {% endif %}
+        unit_of_measurement: "AQI"
+        availability: >
+          {{ states('sensor.air_quality_sensor_pm2_5') not in ['none', 'unknown', 'unavailable'] }}
+        attributes:
+          friendly_name: "Outdoor AQI"
+
+  - sensor:
+      - name: "Indoor AQI"
+        unique_id: indoor_aqi
+        state: >
+          {% set pm25 = states('sensor.elemental_pm2_5')|float(0) %}
+          {% macro calcAQI(Cp, Ih, Il, BPh, BPl) -%}
+            {{ (((Ih - Il)/(BPh - BPl)) * (Cp - BPl) + Il)|round }}
+          {%- endmacro %}
+          {% if pm25 > 1000 %}
+            {{ none }}
+          {% elif pm25 > 350.5 %}
+            {{ calcAQI(pm25, 500.0, 401.0, 500.0, 350.5) }}
+          {% elif pm25 > 250.5 %}
+            {{ calcAQI(pm25, 400.0, 301.0, 350.4, 250.5) }}
+          {% elif pm25 > 150.5 %}
+            {{ calcAQI(pm25, 300.0, 201.0, 250.4, 150.5) }}
+          {% elif pm25 > 55.5 %}
+            {{ calcAQI(pm25, 200.0, 151.0, 150.4, 55.5) }}
+          {% elif pm25 > 35.5 %}
+            {{ calcAQI(pm25, 150.0, 101.0, 55.4, 35.5) }}
+          {% elif pm25 > 12.1 %}
+            {{ calcAQI(pm25, 100.0, 51.0, 35.4, 12.1) }}
+          {% elif pm25 >= 0.0 %}
+            {{ calcAQI(pm25, 50.0, 0.0, 12.0, 0.0) }}
+          {% else %}
+            {{ none }}
+          {% endif %}
+        unit_of_measurement: "AQI"
+        availability: >
+          {{ states('sensor.elemental_pm2_5') not in ['none', 'unknown', 'unavailable'] }}
+        attributes:
+          friendly_name: "Indoor AQI"
+
+  - sensor:
+    - name: "Outdoor Feels Like Temperature"
+      unique_id: outdoor_feels_like_temperature
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      state: >
+        {% set t = states('sensor.home_weather_station_outdoor_temperature') | float(999) %}
+        {% set rh = states('sensor.home_weather_station_humidity')            | float(999) %}
+        {% set wind_kmh = states('sensor.home_weather_station_wind_speed')   | float(999) %}
+
+        {% if t == 999 or rh == 999 or wind_kmh == 999 %}
+          unknown
+        {% else %}
+          {% set wind_ms = wind_kmh / 3.6 %}
+          {% set e = (rh / 100) * 6.105 * (2.718281828 ** ((17.27 * t) / (237.7 + t))) %}
+          {% set apparent = t + 0.33 * e - 0.70 * wind_ms - 4.00 %}
+          {{ apparent | round(1) }}
+        {% endif %}
+  - sensor:
+      - name: "Outdoor Feels Like Temperature (Smoothed Rounded)"
+        unique_id: outdoor_feels_like_temperature_smoothed_rounded
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: >
+          {{ states('sensor.outdoor_feels_like_temperature_smoothed') | float(0) | round(1) }}
+      
+  - sensor:
+      - name: "EV Charging from Grid"
+        unique_id: ev_charging_from_grid
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set ev    = (states('sensor.tesla_wall_connector_power')|float(0)) / 1000 %}
+          {% set grid  = states('sensor.power_from_grid_to_home')    |float(0) %}
+          {% set solar = states('sensor.power_from_solar_to_home')    |float(0) %}
+          {% set batt  = states('sensor.power_from_battery_to_home')  |float(0) %}
+          {% set total = grid + solar + batt %}
+          {% if total > 0 %}
+            {{ (ev * (grid/total)) | round(3) }}
+          {% else %}
+            0
+          {% endif %}
+
+      - name: "EV Charging from Solar"
+        unique_id: ev_charging_from_solar
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set ev    = (states('sensor.tesla_wall_connector_power')|float(0)) / 1000 %}
+          {% set grid  = states('sensor.power_from_grid_to_home')    |float(0) %}
+          {% set solar = states('sensor.power_from_solar_to_home')    |float(0) %}
+          {% set batt  = states('sensor.power_from_battery_to_home')  |float(0) %}
+          {% set total = grid + solar + batt %}
+          {% if total > 0 %}
+            {{ (ev * (solar/total)) | round(3) }}
+          {% else %}
+            0
+          {% endif %}
+
+      - name: "EV Charging from Battery"
+        unique_id: ev_charging_from_battery
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set ev    = (states('sensor.tesla_wall_connector_power')|float(0)) / 1000 %}
+          {% set grid  = states('sensor.power_from_grid_to_home')    |float(0) %}
+          {% set solar = states('sensor.power_from_solar_to_home')    |float(0) %}
+          {% set batt  = states('sensor.power_from_battery_to_home')  |float(0) %}
+          {% set total = grid + solar + batt %}
+          {% if total > 0 %}
+            {{ (ev * (batt/total)) | round(3) }}
+          {% else %}
+            0
+          {% endif %}
+
+  - sensor:
+      - name: "Tesla Wall Connector Energy (kWh)"
+        unique_id: "tesla_wall_connector_energy_kwh"
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        state: >
+          {% set wh = states('sensor.tesla_wall_connector_energy') | float(0) %}
+          {{ (wh / 1000) | round(1) }}
+
+  - sensor:
+      - name: "The Abode Battery Capacity"
+        unique_id: "the_abode_battery_capacity"
+        unit_of_measurement: "kWh"
+        state_class: measurement
+        state: >
+          {% set cap1 = states('sensor.the_abode_tg1212890031p8_battery_capacity') | float(0) %}
+          {% set cap2 = states('sensor.the_abode_tg124217002zjh_battery_capacity') | float(0) %}
+          {{ (cap1 + cap2) | round(2) }}
+  - sensor:
+    - name: "Tesla Powerwall Battery Charge Actual"
+      unique_id: "powerwall_charge_actual"
+      state_class: measurement
+      unit_of_measurement: "%"
+      device_class: battery
+      state: >
+        {% set raw_charge = states('sensor.powerwall_charge') | float(0) %}
+        {% set adjusted_ratio = ((raw_charge / 100.0) - 0.05) / 0.95 %}
+        {% set actual_percent = adjusted_ratio * 100 %}
+        {{ [actual_percent, 0] | max | round(2) }}
+  - sensor:
+    - name: "Tesla Powerwall Battery Backup Reserve Actual"
+      unique_id: "powerwall_backup_reserve_actual"
+      state_class: measurement
+      unit_of_measurement: "%"
+      device_class: battery
+      state: >
+        {% set raw_reserve = states('sensor.powerwall_backup_reserve') | float(0) %}
+        {% set adjusted_ratio = ((raw_reserve / 100.0) - 0.05) / 0.95 %}
+        {% set actual_percent = adjusted_ratio * 100 %}
+        {{ [actual_percent, 0] | max | round(2) }}
+  - sensor:
+    - name: "Tesla Wall Connector Power"
+      unique_id: "tesla_wall_connector_power"
+      icon: mdi:lightning-bolt
+      device_class: power
+      state_class: measurement
+      unit_of_measurement: "W"
+      state: >
+        {% set va = states('sensor.tesla_wall_connector_phase_a_voltage') | float(0) %}
+        {% set ia = states('sensor.tesla_wall_connector_phase_a_current') | float(0) %}
+        {% set vb = states('sensor.tesla_wall_connector_phase_b_voltage') | float(0) %}
+        {% set ib = states('sensor.tesla_wall_connector_phase_b_current') | float(0) %}
+        {% set vc = states('sensor.tesla_wall_connector_phase_c_voltage') | float(0) %}
+        {% set ic = states('sensor.tesla_wall_connector_phase_c_current') | float(0) %}
+        {% set total_power = (va * ia) + (vb * ib) + (vc * ic) %}
+        {{ total_power | round(0) }}
+  - sensor:
+      - name: "The Abode Battery Export"
+        unique_id: "the_abode_battery_export"
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total
+        state: >
+          {% set export1 = 0 %}
+          {% set export2 = states('sensor.the_abode_tg124217002zjh_battery_export') | float(0)* 1000 %}
+          {% set total_export = export1 + export2 %}
+          {{ total_export | round(1) }}
+  - sensor:
+      - name: "The Abode Battery Import"
+        unique_id: "the_abode_battery_import"
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total
+        state: >
+          {% set import1 = 0 %}
+          {% set import2 = states('sensor.the_abode_tg124217002zjh_battery_import') | float(0) * 1000 %}
+          {% set total_import = import1 + import2 %}
+          {{ total_import | round(1) }}
+  - sensor:
+      - name: "Tesla Powerwall Rated Capacity"
+        unique_id: "powerwall_rated_capacity"
+        unit_of_measurement: "Wh"
+        device_class: energy
+        state: "13500"
+  - sensor:
+      - name: "Powerwall Battery 1 Manufacture Info"
+        unique_id: "powerwall_battery_1_manufacture_info"
+        state: "October 2021"
+        attributes:
+          location: "Gigafactory Nevada"
+          serial_number: "TG1212890031P8"
+          part_number: "3012170-05-B"
+          description: "Tesla Powerwall Battery 1 Manufacture Details"
+  - sensor:
+      - name: "Powerwall Battery 2 Manufacture Info"
+        unique_id: "powerwall_battery_2_manufacture_info"
+        state: "August 2024"
+        attributes:
+          location: "Gigafactory Nevada"
+          serial_number: "TG124217002ZJH"
+          part_number: "3012170-45-E"
+          description: "Tesla Powerwall Battery 2 Manufacture Details"
+  - sensor:
+      - name: "Tesla Powerwall Battery 1 Degradation"
+        unique_id: "powerwall_battery_1_degradation"
+        unit_of_measurement: "%"
+        state_class: measurement
+        state: >
+          {% set rated_capacity_wh = 13500 %}
+          {% set current_capacity_kwh = states('sensor.the_abode_tg1212890031p8_battery_capacity') | float(0) %}
+          {% set current_capacity_wh = current_capacity_kwh * 1000 %}
+          
+          {% if rated_capacity_wh > 0 %}
+            {% set degradation = ((1 - (current_capacity_wh / rated_capacity_wh)) * 100) %}
+            {{ [degradation, 0] | max | round(2) }}
+          {% else %}
+            unknown
+          {% endif %}
+        attributes:
+          rated_capacity_wh: 13500
+          current_capacity_kwh: >
+            {{ states('sensor.the_abode_tg1212890031p8_battery_capacity') }}
+  - sensor:
+      - name: "Tesla Powerwall Battery 2 Degradation"
+        unique_id: "powerwall_battery_2_degradation"
+        unit_of_measurement: "%"
+        state_class: measurement
+        state: >
+          {% set rated_capacity_wh = 13500 %}
+          {% set current_capacity_kwh = states('sensor.the_abode_tg124217002zjh_battery_capacity') | float(0) %}
+          {% set current_capacity_wh = current_capacity_kwh * 1000 %}
+          
+          {% if rated_capacity_wh > 0 %}
+            {% set degradation = ((1 - (current_capacity_wh / rated_capacity_wh)) * 100) %}
+            {{ [degradation, 0] | max | round(2) }}
+          {% else %}
+            unknown
+          {% endif %}
+        attributes:
+          rated_capacity_wh: 13500
+          current_capacity_kwh: >
+            {{ states('sensor.the_abode_tg124217002zjh_battery_capacity') }}
+  - sensor:
+      - name: "Tesla Powerwall Battery 1 Round Trip Efficiency"
+        unique_id: "powerwall_battery_1_round_trip_efficiency"
+        unit_of_measurement: "%"
+        device_class: battery
+        state_class: measurement
+        state: >
+          {% set charged = states('sensor.the_abode_tg1212890031p8_battery_import') | float(0) %}
+          {% set discharged = states('sensor.the_abode_tg1212890031p8_battery_export') | float(0) %}
+          {% if charged > 0 %}
+            {{ ((discharged / charged) * 100) | round(1) }}
+          {% else %}
+            unknown
+          {% endif %}
+  - sensor:
+      - name: "Tesla Powerwall Battery 2 Round Trip Efficiency"
+        unique_id: "powerwall_battery_2_round_trip_efficiency"
+        unit_of_measurement: "%"
+        device_class: battery
+        state_class: measurement
+        state: >
+          {% set charged = states('sensor.the_abode_tg124217002zjh_battery_import') | float(0) %}
+          {% set discharged = states('sensor.the_abode_tg124217002zjh_battery_export') | float(0) %}
+          {% if charged > 0 %}
+            {{ ((discharged / charged) * 100) | round(1) }}
+          {% else %}
+            unknown
+          {% endif %}
+
+# UPS sensors
+
+  - sensor:
+      - name: "UPS1 Battery Runtime"
+        unique_id: "ups1_runtime_friendly"
+        icon: mdi:timer-sand
+        state: >
+          {% set total_seconds = states('sensor.ups1_battery_runtime') | int(0) %}
+          {% set minutes = (total_seconds % 3600) // 60 %}
+          {% set hours = (total_seconds % 86400) // 3600 %}
+          {% set days = total_seconds // 86400 %}
+
+          {% if total_seconds < 60 %}
+            Less than a minute
+          {% else %}
+            {{ [days ~ 'd', hours ~ 'h', minutes ~ 'm']
+                | select('match', '^[1-9]')
+                | join(' ') }}
+          {% endif %}
+
+      - name: "UPS2 Battery Runtime"
+        unique_id: "ups2_runtime_friendly"
+        icon: mdi:timer-sand
+        state: >
+          {% set total_seconds = states('sensor.ups2_battery_runtime') | int(0) %}
+          {% set minutes = (total_seconds % 3600) // 60 %}
+          {% set hours = (total_seconds % 86400) // 3600 %}
+          {% set days = total_seconds // 86400 %}
+
+          {% if total_seconds < 60 %}
+            Less than a minute
+          {% else %}
+            {{ [days ~ 'd', hours ~ 'h', minutes ~ 'm']
+                | select('match', '^[1-9]')
+                | join(' ') }}
+          {% endif %}
+      - name: "UPS3 Battery Runtime"
+        unique_id: "ups3_runtime_friendly"
+        icon: mdi:timer-sand
+        state: >
+          {% set total_seconds = states('sensor.ups3_battery_runtime') | int(0) %}
+          {% set minutes = (total_seconds % 3600) // 60 %}
+          {% set hours = (total_seconds % 86400) // 3600 %}
+          {% set days = total_seconds // 86400 %}
+
+          {% if total_seconds < 60 %}
+            Less than a minute
+          {% else %}
+            {{ [days ~ 'd', hours ~ 'h', minutes ~ 'm']
+                | select('match', '^[1-9]')
+                | join(' ') }}
+          {% endif %}
+      - name: "UPS4 Battery Runtime"
+        unique_id: "ups4_runtime_friendly"
+        icon: mdi:timer-sand
+        state: >
+          {% set total_seconds = states('sensor.ups4_battery_runtime') | int(0) %}
+          {% set minutes = (total_seconds % 3600) // 60 %}
+          {% set hours = (total_seconds % 86400) // 3600 %}
+          {% set days = total_seconds // 86400 %}
+
+          {% if total_seconds < 60 %}
+            Less than a minute
+          {% else %}
+            {{ [days ~ 'd', hours ~ 'h', minutes ~ 'm']
+                | select('match', '^[1-9]')
+                | join(' ') }}
+          {% endif %}
+      - name: "UPS5 Battery Runtime"
+        unique_id: "ups5_runtime_friendly"
+        icon: mdi:timer-sand
+        state: >
+          {% set total_seconds = states('sensor.ups5_battery_runtime') | int(0) %}
+          {% set minutes = (total_seconds % 3600) // 60 %}
+          {% set hours = (total_seconds % 86400) // 3600 %}
+          {% set days = total_seconds // 86400 %}
+
+          {% if total_seconds < 60 %}
+            Less than a minute
+          {% else %}
+            {{ [days ~ 'd', hours ~ 'h', minutes ~ 'm']
+                | select('match', '^[1-9]')
+                | join(' ') }}
+          {% endif %}
+
+  - sensor:
+      - name: "UPS1 Battery Runtime Duration"
+        unique_id: "ups1_runtime_duration_formatted"
+        device_class: duration
+        unit_of_measurement: "s"
+        icon: mdi:timer-sand
+        state: "{{ states('sensor.ups1_battery_runtime') | int(0) }}"
+
+      - name: "UPS2 Battery Runtime Duration"
+        unique_id: "ups2_runtime_duration_formatted"
+        device_class: duration
+        unit_of_measurement: "s"
+        icon: mdi:timer-sand
+        state: "{{ states('sensor.ups2_battery_runtime') | int(0) }}"
+
+      - name: "UPS3 Battery Runtime Duration"
+        unique_id: "ups3_runtime_duration_formatted"
+        device_class: duration
+        unit_of_measurement: "s"
+        icon: mdi:timer-sand
+        state: "{{ states('sensor.ups3_battery_runtime') | int(0) }}"
+
+      - name: "UPS4 Battery Runtime Duration"
+        unique_id: "ups4_runtime_duration_formatted"
+        device_class: duration
+        unit_of_measurement: "s"
+        icon: mdi:timer-sand
+        state: "{{ states('sensor.ups4_battery_runtime') | int(0) }}"
+
+      - name: "UPS5 Battery Runtime Duration"
+        unique_id: "ups5_runtime_duration_formatted"
+        device_class: duration
+        unit_of_measurement: "s"
+        icon: mdi:timer-sand
+        state: "{{ states('sensor.ups5_battery_runtime') | int(0) }}"
+
+# network sensors
+
+  - sensor:
+      - name: "WAN Download Speed"
+        unit_of_measurement: "MBps"
+        device_class: data_rate
+        state: >
+          {% set bps = states('sensor.wan_download_rate_bps') | float %}
+          {{ (bps / 1024 / 1024) | round(2) }}
+
+      - name: "WAN Upload Speed"
+        unit_of_measurement: "MBps"
+        device_class: data_rate
+        state: >
+          {% set bps = states('sensor.wan_upload_rate_bps') | float %}
+          {{ (bps / 1024 / 1024) | round(2) }}
+
+  - sensor:
+      - name: "Powerwall Charge Power"
+        unique_id: powerwall_charge_power
+        device_class: power
+        state_class: measurement
+        # CHANGED: Unit is now kW
+        unit_of_measurement: "W"
+        state: >
+          {% set power_kw = states('sensor.the_abode_battery_power') | float(0) %}
+          {% if power_kw < 0 %}
+            {# Convert kW to W and round to 2 decimal places #}
+            {{ ((power_kw * -1) * 1000) | round(2) }}
+          {% else %}
+            0
+          {% endif %}
+    
+      - name: "Powerwall Discharge Power"
+        unique_id: powerwall_discharge_power
+        device_class: power
+        state_class: measurement
+        # CHANGED: Unit is now kW
+        unit_of_measurement: "W"
+        state: >
+          {% set power_kw = states('sensor.the_abode_battery_power') | float(0) %}
+          {% if power_kw > 0 %}
+            {# Convert kW to W and round to 2 decimal places #}
+            {{ (power_kw * 1000) | round(2) }}
+          {% else %}
+            0
+          {% endif %}
+
+  - sensor:
+    - name: "Powerwall Debug Value"
+      unique_id: powerwall_debug_value
+      state: >
+        {# This just shows the raw number from your powerwall sensor #}
+        {{ states('sensor.tesla_powerwall_battery_power') | float(0) }}
+      attributes:
+        value_in_watts: >
+          {# This shows what the number should be after converting to watts #}
+          {{ (states('sensor.tesla_powerwall_battery_power') | float(0) | abs) * 1000 }}
+
+# data storage sensors
+sensor:
+  - platform: influxdb
+    host: 192.168.85.10
+    port: 8086
+    username: hassio
+    password: !secret influxdb_pass
+    scan_interval: 3600
+    database: _internal
+
+    queries:
+      - name: InfluxDB Database Size
+        unit_of_measurement: MB
+        value_template: "{{ (value | float(0) / 1024 / 1024) | round(1) }}"
+        group_function: sum
+        measurement: '"monitor"."shard"'
+        field: diskBytes
+        where: '"database"=''hassio'' AND time > now() - 5m'
+
+      - name: InfluxDB DB Size (Unifi)
+        unit_of_measurement: MB
+        value_template: "{{ (value | float(0) / 1024 / 1024) | round(1) }}"
+        group_function: sum
+        measurement: '"monitor"."shard"'
+        field: diskBytes
+        where: '"database"=''unifi'' AND time > now() - 5m'
+
+      - name: InfluxDB DB Size (Proxmox)
+        unit_of_measurement: MB
+        value_template: "{{ (value | float(0) / 1024 / 1024) | round(1) }}"
+        group_function: sum
+        measurement: '"monitor"."shard"'
+        field: diskBytes
+        where: '"database"=''mondb'' AND time > now() - 5m'
+
+      - name: InfluxDB DB Size (Swarmpit)
+        unit_of_measurement: MB
+        value_template: "{{ (value | float(0) / 1024 / 1024) | round(1) }}"
+        group_function: sum
+        measurement: '"monitor"."shard"'
+        field: diskBytes
+        where: '"database"=''swarmpit'' AND time > now() - 5m'
+
+      - name: InfluxDB DB Size (GraphiteDB)
+        unit_of_measurement: MB
+        value_template: "{{ (value | float(0) / 1024 / 1024) | round(1) }}"
+        group_function: sum
+        measurement: '"monitor"."shard"'
+        field: diskBytes
+        where: '"database"=''graphitedb'' AND time > now() - 5m'
+
+  # CPU Raspberry Pi Temp
+  - platform: command_line
+    name: "CPU Temperature"
+    unique_id: "raspberry_pi_cpu_temp"
+    command: "cat /sys/class/thermal/thermal_zone0/temp"
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    value_template: >
+      {% if value is number or value | float(0) > 0 %}
+        {{ (value | float(0) * 0.001) | round(2) }}
+      {% else %}
+        unknown
+      {% endif %}
+          
+# power integration sensors (power → energy in kWh)
+  - platform: integration
+    source: sensor.power_from_solar_to_home
+    name: Integrated Energy from Solar
+    round: 3
+    method: trapezoidal
+    unit_time: h
+
+  - platform: integration
+    source: sensor.power_from_battery_to_home
+    name: Integrated Energy from Battery
+    round: 3
+    method: trapezoidal
+    unit_time: h
+
+  - platform: integration
+    source: sensor.power_from_grid_to_home
+    name: Integrated Energy from Grid
+    round: 3
+    method: trapezoidal
+    unit_time: h
+
+  - platform: integration
+    source: sensor.power_from_solar_to_home_excl_ev
+    name: Integrated Energy from Solar (Excl. EV)
+    round: 3
+    method: trapezoidal
+    unit_time: h
+
+  - platform: integration
+    source: sensor.power_from_battery_to_home_excl_ev
+    name: Integrated Energy from Battery (Excl. EV)
+    round: 3
+    method: trapezoidal
+    unit_time: h
+
+  - platform: integration
+    source: sensor.power_from_grid_to_home_excl_ev
+    name: Integrated Energy from Grid (Excl. EV)
+    round: 3
+    method: trapezoidal
+    unit_time: h
+
+  - platform: integration
+    source: sensor.tesla_charger_power
+    name: Integrated Tesla Charging Energy
+    method: trapezoidal
+    unit_time: h
+    round: 3
+
+  - platform: integration
+    source: sensor.grid_export_power
+    name: Integrated Energy Exported to Grid
+    method: trapezoidal
+    unit_time: h
+    round: 3
+
+# ──────────────────────────────────────────────────────────────────
+# integration sensors to convert power (W) into energy (kWh)
+# ──────────────────────────────────────────────────────────────────
+
+  - platform: integration
+    source: sensor.powerwall_charge_power
+    name: "Powerwall Charge Energy"
+    unique_id: powerwall_charge_energy
+    round: 2
+
+  - platform: integration
+    source: sensor.powerwall_discharge_power
+    name: "Powerwall Discharge Energy"
+    unique_id: powerwall_discharge_energy
+    round: 2
+
+# ──────────────────────────────────────────────────────────────────
+# EV Charging energy (kWh) — trapezoidal integration of the above
+# ──────────────────────────────────────────────────────────────────
+  - platform: integration
+    source: sensor.ev_charging_from_grid
+    name: "Integrated EV Charging from Grid"
+    method: trapezoidal
+    unit_time: h
+    round: 3
+
+  - platform: integration
+    source: sensor.ev_charging_from_solar
+    name: "Integrated EV Charging from Solar"
+    method: trapezoidal
+    unit_time: h
+    round: 3
+
+  - platform: integration
+    source: sensor.ev_charging_from_battery
+    name: "Integrated EV Charging from Battery"
+    method: trapezoidal
+    unit_time: h
+    round: 3
+    
+# ───────────────────────────────────────────────────────────────────────────────    
+
+
+# climate sensors
+
+  - platform: statistics
+    name: "Outdoor Feels Like Temperature (Smoothed)"
+    entity_id: sensor.outdoor_feels_like_temperature
+    state_characteristic: mean
+    max_age:
+      minutes: 10
+      
+  - platform: statistics
+    name: "Outdoor AQI 24h Average"
+    entity_id: sensor.outdoor_aqi
+    state_characteristic: mean
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: "Indoor AQI 24h Average"
+    entity_id: sensor.indoor_aqi
+    state_characteristic: mean
+    max_age:
+      hours: 24
+
+# network sensors
+
+  - platform: snmp
+    name: "UDM WAN In"
+    host: 192.168.86.1
+    baseoid: 1.3.6.1.2.1.31.1.1.1.6.15  # br0 ifHCInOctets
+    community: "public"
+    version: "2c"
+    scan_interval: 10
+    value_template: "{{ value | int }}"
+    unit_of_measurement: "B"
+    state_class: total_increasing
+    device_class: data_size
+
+  - platform: snmp
+    name: "UDM WAN Out"
+    host: 192.168.86.1
+    baseoid: 1.3.6.1.2.1.31.1.1.1.10.15  # br0 ifHCOutOctets
+    community: "public"
+    version: "2c"
+    scan_interval: 10
+    value_template: "{{ value | int }}"
+    unit_of_measurement: "B"
+    state_class: total_increasing
+    device_class: data_size
+
+  - platform: statistics
+    name: "WAN Download Rate Bps"
+    entity_id: sensor.udm_wan_in
+    state_characteristic: change_second
+    sampling_size: 5
+    max_age:
+      minutes: 5
+
+  - platform: statistics
+    name: "WAN Upload Rate Bps"
+    entity_id: sensor.udm_wan_out
+    state_characteristic: change_second
+    sampling_size: 5
+    max_age:
+      minutes: 5

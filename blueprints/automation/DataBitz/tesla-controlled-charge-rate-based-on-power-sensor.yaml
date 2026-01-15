@@ -1,0 +1,250 @@
+blueprint:
+  name: Tesla controlled charge rate based on power sensor
+  description: "## Tesla controlled charge rate based on power sensor  \n\nChecks
+    every x minutes to find the optimum charging value based on home power usage W.\n\nDecreases
+    charge rate significantly when a upper or maximum W value is reached by a power
+    sensor.\n\nIncreases charge rate by 1 every x minutes if power sensor is below
+    a lower W value.\n\n**IMPORTANT => Use at your own risk. Please see the discussions
+    in the Home Assistant community**\n\n*[Blueprint Version: 0.04.01](https://community.home-assistant.io/t/tesla-controlled-charge-rate-based-on-power-sensor/607107)*
+    \   \n"
+  domain: automation
+  input:
+    power_sensor_1_entity:
+      name: Power Sensor 1
+      description: This is the main power sensor that will be used to measure load
+        (e.g. sensor.main_meter_power), check the state of the sensor to determine
+        if it uses W or kW and use the same units when setting trigger values.
+      selector:
+        entity:
+          filter:
+          - domain:
+            - sensor
+            device_class:
+            - power
+          multiple: false
+    power_sensor_1_max_value:
+      name: Power Sensor 1 Trigger Max Value (W or kW based on sensor type)
+      description: This is a absolute max value which will trigger a drop in charging
+        amps.
+      default: 11000
+      selector:
+        number:
+          min: 0.0
+          max: 100000.0
+          mode: box
+          step: 1.0
+    power_sensor_1_charge_upper_value:
+      name: Power Sensor 1 Trigger Upper Value (W or kW based on sensor type)
+      description: This is the upper value for the power sensor which will trigger
+        a drop in charging amps.
+      default: 8000
+      selector:
+        number:
+          min: 0.0
+          max: 100000.0
+          mode: box
+          step: 1.0
+    power_sensor_1_charge_lower_value:
+      name: Power Sensor 1 Charging Lower Value (W or kW based on sensor type)
+      description: This is the value for the power sensor which allows the charger
+        to increase amps.
+      default: 6000
+      selector:
+        number:
+          min: 0.0
+          max: 100000.0
+          mode: box
+          step: 1.0
+    polling_time:
+      name: Polling frequency (Mins)
+      description: Number of minutes before checking if charging amps can be increased.
+      default: /5
+      selector:
+        select:
+          options:
+          - label: 1 min
+            value: /1
+          - label: 5 mins
+            value: /5
+          - label: 15 mins
+            value: /15
+          - label: 30 mins
+            value: /30
+          custom_value: false
+          multiple: false
+          sort: false
+    tesla_charging_state_entity:
+      name: Select the Tesla charging state entity
+      description: Select the entity which represents the Tesla charging state (e.g.
+        binary_sensor.tesla_charging)
+      selector:
+        entity:
+          filter:
+          - domain:
+            - binary_sensor
+            device_class:
+            - battery_charging
+          multiple: false
+    tesla_charging_amps_number_entity:
+      name: Select the Tesla charging amps entity
+      description: Select the entity which represents the Tesla charging amps (e.g.
+        number.tesla_charging_amps)
+      selector:
+        entity:
+          filter:
+          - domain:
+            - number
+            integration: tesla_custom
+          - domain:
+            - number
+            integration: tesla
+          - domain:
+            - number
+            integration: lektrico_custom
+          multiple: false
+    tesla_charging_amps_upper_value:
+      name: Select the peak amps for charger (Amps)
+      description: Select the number of amps that charging should not be increased
+        past. Best set to the maximum charge rate possible with the charger, or a
+        lower value. Not higher than the maximum possible with the charger.
+      default: 8
+      selector:
+        number:
+          min: 0.0
+          max: 32.0
+          step: 1.0
+          mode: slider
+    tesla_charging_amps_lower_value:
+      name: Select the minimum amps for charger (Amps)
+      description: Select the number of amps to reduce charging to when a power sensor
+        upper/max value is exceeded
+      default: 2
+      selector:
+        number:
+          min: 0.0
+          max: 32.0
+          step: 1.0
+          mode: slider
+    tesla_device_tracker_entity:
+      name: Select the Tesla location entity
+      description: Select the entity which represents the Tesla location (e.g. device_tracker.tesla_location_tracker)
+      selector:
+        entity:
+          filter:
+          - domain:
+            - device_tracker
+            integration: tesla_custom
+          - domain:
+            - device_tracker
+            integration: tesla
+          multiple: false
+    tesla_control_location:
+      name: Select the Tesla location to be controlled
+      description: Select the location where the charging should be controlled (e.g.
+        Home)
+      default: home
+      selector:
+        select:
+          options:
+          - label: Home
+            value: home
+          - label: Away
+            value: not_home
+          - label: Any
+            value: 'null'
+          custom_value: false
+          multiple: false
+          sort: false
+    power_sensor_2_entity:
+      name: Power Sensor 2
+      description: Additional power sensor which can trigger a drop in charging amps
+        (e.g. 2nd high load monitor). If no additional power sensor is required, set
+        to the same entity as Power Sensor 1 but with a higher trigger max value,
+        it can then act as backup trigger.
+      selector:
+        entity:
+          filter:
+          - domain:
+            - sensor
+            device_class:
+            - power
+          multiple: false
+    power_sensor_2_max_value:
+      name: Power Sensor 2 Trigger Max Value (W or kW based on sensor type)
+      description: This is a absolute max value which will trigger a drop in charging
+        amps.
+      selector:
+        number:
+          min: 0.0
+          max: 100000.0
+          mode: box
+          step: 1.0
+  source_url: https://gist.github.com/DataBitz/bcccb37ab0678286bc8cabb23a61d4cb
+variables:
+  var_tesla_charging_amps_number_entity: !input tesla_charging_amps_number_entity
+trigger:
+- platform: numeric_state
+  entity_id: !input power_sensor_1_entity
+  above: !input power_sensor_1_max_value
+  id: power_1_max_trigger
+- platform: numeric_state
+  entity_id: !input power_sensor_1_entity
+  above: !input power_sensor_1_charge_upper_value
+  id: power_1_upper_trigger
+- platform: time_pattern
+  minutes: !input polling_time
+  enabled: true
+  id: polling_time_trigger
+- platform: numeric_state
+  entity_id: !input power_sensor_2_entity
+  above: !input power_sensor_2_max_value
+  id: power_2_max_trigger
+condition:
+- condition: state
+  entity_id: !input tesla_charging_state_entity
+  state: 'on'
+  enabled: true
+- condition: state
+  entity_id: !input tesla_device_tracker_entity
+  state: !input tesla_control_location
+action:
+- if:
+  - condition: trigger
+    id:
+    - polling_time_trigger
+  then:
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: '{{ range(1, 30) | random }}'
+      milliseconds: 0
+- if:
+  - condition: numeric_state
+    entity_id: !input power_sensor_1_entity
+    above: !input power_sensor_1_charge_upper_value
+  then:
+  - service: number.set_value
+    data:
+      value: !input tesla_charging_amps_lower_value
+    target:
+      entity_id: !input tesla_charging_amps_number_entity
+    alias: Cut Tesla charging rate significantly
+  else:
+  - condition: numeric_state
+    entity_id: !input power_sensor_1_entity
+    below: !input power_sensor_1_charge_lower_value
+    alias: Check load from main power sensor is low enough to allow increase in charging
+      rate
+  - condition: numeric_state
+    entity_id: !input tesla_charging_amps_number_entity
+    below: !input tesla_charging_amps_upper_value
+    alias: Check charging amp rate is not already at or above the desired upper value
+  - service: number.set_value
+    target:
+      entity_id: !input tesla_charging_amps_number_entity
+    data:
+      value: '{{ states(var_tesla_charging_amps_number_entity) | int + 1 }}'
+    alias: Increase charging rate by 1 amp
+  alias: Adjust Tesla charging amp based on Home EV Charging Max Power and Target
+    values
+mode: restart

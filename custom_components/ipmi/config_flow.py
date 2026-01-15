@@ -1,0 +1,294 @@
+"""Config flow for IPMI integration."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+import logging
+from typing import Any
+
+import voluptuous as vol
+
+from homeassistant import exceptions
+from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.const import (
+    CONF_ALIAS,
+    CONF_BASE,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
+
+from . import IpmiServer
+from .const import (
+    CONF_IGNORE_CHECKSUM_ERRORS,
+    DEFAULT_HOST,
+    DEFAULT_ALIAS,
+    DEFAULT_PORT,
+    DEFAULT_USERNAME,
+    DEFAULT_PASSWORD,
+    DEFAULT_SCAN_INTERVAL,
+    CONF_ADDON_PORT,
+    CONF_ADDON_INTERFACE,
+    CONF_ADDON_PARAMS,
+    CONF_KG_KEY,
+    DEFAULT_KG_KEY,
+    CONF_PRIVILEGE_LEVEL,
+    DEFAULT_PRIVILEGE_LEVEL,
+    PRIVILEGE_LEVELS,
+    DEFAULT_ADDON_PORT,
+    DEFAULT_INTERFACE_TYPE,
+    CONF_IPMI_SERVER_HOST,
+    DEFAULT_IPMI_SERVER_HOST,
+    DOMAIN,
+)
+
+_PORT_SELECTOR = vol.All(
+    selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=1, max=65535, mode=selector.NumberSelectorMode.BOX
+        ),
+    ),
+    vol.Coerce(int),
+)
+
+_INTERFACE_SELECTOR = vol.All(
+    selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=["auto", "lanplus", "lan", "imb", "open"],
+            multiple=False,
+            mode="dropdown",
+        ),
+    ),
+    vol.Coerce(str),
+)
+
+_PRIVILEGE_LEVEL_SELECTOR = vol.All(
+    selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=PRIVILEGE_LEVELS, multiple=False, mode="dropdown"
+        ),
+    ),
+    vol.Coerce(str),
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def _validate_kg_key(value: str) -> str:
+    """Validate the Kg key is valid hex and proper length."""
+    # Handle non-string types gracefully
+    if value is None:
+        return ""
+    # Convert to string if not already
+    if not isinstance(value, str):
+        value = str(value)
+    # Handle empty or whitespace-only strings
+    if not value.strip():
+        return ""
+    # Remove any whitespace
+    value = value.strip()
+    # Must be even number of hex characters (valid octets)
+    if len(value) % 2 != 0:
+        raise vol.Invalid(
+            "Kg key must have an even number of hexadecimal characters (valid octets)"
+        )
+    # Must be at most 40 hex characters (20 bytes max for IPMI v2.0/RMCP+)
+    if len(value) > 40:
+        raise vol.Invalid("Kg key must be at most 40 hexadecimal characters (20 bytes)")
+    # Must be valid hex
+    try:
+        int(value, 16)
+    except ValueError:
+        raise vol.Invalid("Kg key must contain only hexadecimal characters (0-9, A-F)")
+    return value.upper()
+
+
+def _base_schema(discovery_info: zeroconf.ZeroconfServiceInfo | None) -> vol.Schema:
+    """Generate base schema."""
+    base_schema = {}
+    if not discovery_info:
+        base_schema.update(
+            {
+                vol.Required(CONF_ALIAS, default=DEFAULT_ALIAS): cv.string,
+                vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+                vol.Required(CONF_PORT, default=DEFAULT_PORT): _PORT_SELECTOR,
+                vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+                vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+                vol.Optional(CONF_KG_KEY, default=DEFAULT_KG_KEY): cv.string,
+                vol.Optional(
+                    CONF_PRIVILEGE_LEVEL, default=DEFAULT_PRIVILEGE_LEVEL
+                ): _PRIVILEGE_LEVEL_SELECTOR,
+                vol.Optional(
+                    CONF_IPMI_SERVER_HOST, default=DEFAULT_IPMI_SERVER_HOST
+                ): cv.string,
+                vol.Optional(CONF_ADDON_PORT, default=DEFAULT_ADDON_PORT): cv.string,
+                vol.Optional(
+                    CONF_ADDON_INTERFACE, default=DEFAULT_INTERFACE_TYPE
+                ): _INTERFACE_SELECTOR,
+                vol.Optional(CONF_ADDON_PARAMS): cv.string,
+                vol.Optional(CONF_IGNORE_CHECKSUM_ERRORS, default=False): cv.boolean,
+            }
+        )
+
+    return vol.Schema(base_schema)
+
+
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+    """Validate the user input allows us to connect.
+
+    Data has the keys from _base_schema with values provided by the user.
+    """
+
+    # Validate Kg key if provided
+    kg_key = data.get(CONF_KG_KEY, "")
+    kg_key = _validate_kg_key(kg_key)
+    data[CONF_KG_KEY] = kg_key
+
+    ipmi_data = IpmiServer(
+        hass,
+        None,
+        {
+            "host": data.get(CONF_HOST),
+            "port": data.get(CONF_PORT),
+            "alias": data.get(CONF_ALIAS),
+            "username": data.get(CONF_USERNAME),
+            "password": data.get(CONF_PASSWORD),
+            "kg_key": data.get(CONF_KG_KEY),
+            "privilege_level": data.get(CONF_PRIVILEGE_LEVEL),
+            "ipmi_server_host": data.get(CONF_IPMI_SERVER_HOST),
+            "addon_port": data.get(CONF_ADDON_PORT),
+            "addon_interface": data.get(CONF_ADDON_INTERFACE),
+            "addon_extra_params": data.get(CONF_ADDON_PARAMS),
+            CONF_IGNORE_CHECKSUM_ERRORS: data.get(CONF_IGNORE_CHECKSUM_ERRORS, False),
+        },
+    )
+    await hass.async_add_executor_job(ipmi_data.update)
+
+    if not (device_info := ipmi_data._device_info):
+        raise CannotConnect
+
+    return {"device_info": device_info}
+
+
+def _format_host_port_alias(user_input: Mapping[str, Any]) -> str:
+    """Format a host, port, and alias so it can be used for comparison or display."""
+    host = user_input[CONF_HOST]
+    port = user_input[CONF_PORT]
+    alias = user_input[CONF_ALIAS]
+    return f"{alias}@{host}:{port}"
+
+
+class IpmiConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for IPMI."""
+
+    VERSION = 2
+    MINOR_VERSION = 2
+
+    def __init__(self) -> None:
+        """Initialize the ipmi config flow."""
+        self.ipmi_config: dict[str, Any] = {}
+        self.discovery_info: zeroconf.ZeroconfServiceInfo | None = None
+        self.title: str | None = None
+
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Prepare configuration for a discovered ipmi device."""
+        self.discovery_info = discovery_info
+        await self._async_handle_discovery_without_unique_id()
+        self.context["title_placeholders"] = {
+            CONF_PORT: discovery_info.port or DEFAULT_PORT,
+            CONF_HOST: discovery_info.host,
+        }
+        return await self.async_step_user()
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the user input."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if self.discovery_info:
+                user_input.update(
+                    {
+                        CONF_HOST: self.discovery_info.host,
+                        CONF_PORT: self.discovery_info.port or DEFAULT_PORT,
+                    }
+                )
+            info, errors = await self._async_validate_or_error(user_input)
+
+            if not errors:
+                self.ipmi_config.update(user_input)
+                if self._host_port_alias_already_configured(self.ipmi_config):
+                    return self.async_abort(reason="already_configured")
+                title = _format_host_port_alias(self.ipmi_config)
+                return self.async_create_entry(title=title, data=self.ipmi_config)
+
+        return self.async_show_form(
+            step_id="user", data_schema=_base_schema(self.discovery_info), errors=errors
+        )
+
+    def _host_port_alias_already_configured(self, user_input: dict[str, Any]) -> bool:
+        """See if we already have an ipmi entry matching user input configured."""
+        existing_host_port_aliases = {
+            _format_host_port_alias(entry.data)
+            for entry in self._async_current_entries()
+            if CONF_HOST in entry.data
+        }
+        return _format_host_port_alias(user_input) in existing_host_port_aliases
+
+    async def _async_validate_or_error(
+        self, config: dict[str, Any]
+    ) -> tuple[dict[str, Any], dict[str, str]]:
+        errors = {}
+        info = {}
+        try:
+            info = await validate_input(self.hass, config)
+        except CannotConnect:
+            errors[CONF_BASE] = "cannot_connect"
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception: %s", err)
+            errors[CONF_BASE] = "unknown"
+        return info, errors
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle a option flow for ipmi."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        scan_interval = self.config_entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
+
+        base_schema = {
+            vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval): vol.All(
+                vol.Coerce(int), vol.Clamp(min=10, max=300)
+            )
+        }
+
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(base_schema))
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""

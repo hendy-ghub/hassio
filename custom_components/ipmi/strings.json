@@ -1,0 +1,57 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the IPMI server",
+        "data": {
+          "alias": "[%key:common::config_flow::data::alias%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "kg_key": "Kg encryption key",
+          "privilege_level": "Privilege level",
+          "ipmi_server_host": "[%key:common::config_flow::data::ipmi_server_host%]",
+          "addon_port": "[%key:common::config_flow::data::addon_port%]",
+          "addon_interface": "[%key:common::config_flow::data::addon_interface%]",
+          "addon_extra_params": "[%key:common::config_flow::data::addon_extra_params%]"
+        },
+        "data_description": {
+          "kg_key": "Optional. This feature requires the ipmi-server addon backend and is not supported by the python-ipmi library."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "switch": {
+      "chassis": {
+        "name":"Power on/Soft shutdown"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Scan Interval (seconds)"
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "action_type": {
+      "power_on": "Power on",
+      "power_off": "Power off",
+      "power_cycle": "Power cycle",
+      "power_reset": "Power reset",
+      "soft_shutdown": "Soft shutdown"
+    }
+  }
+}

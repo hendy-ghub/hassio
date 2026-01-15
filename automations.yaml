@@ -1,0 +1,1788 @@
+- id: teslamate_mqtt
+  alias: Teslamate - Update Tesla location from MQTT
+  description: Sync Tesla GPS coordinates from TeslaMate into HA device tracker
+  triggers:
+  - topic: teslamate/cars/2/latitude
+    trigger: mqtt
+  - topic: teslamate/cars/2/longitude
+    trigger: mqtt
+  conditions:
+  - condition: template
+    value_template: "{{ states('sensor.tesla_latitude') not in ['unknown', 'unavailable']
+      and\n   states('sensor.tesla_longitude') not in ['unknown', 'unavailable'] }}\n"
+  actions:
+  - data:
+      dev_id: tesla_location
+      gps:
+      - '{{ states(''sensor.tesla_latitude'') | float }}'
+      - '{{ states(''sensor.tesla_longitude'') | float }}'
+    action: device_tracker.see
+  mode: queued
+- id: tariff_weekday_off_peak_pm
+  alias: Electricity Tariff - Set ToU Tariff
+  description: Set ToU Tariff
+  triggers:
+  - minutes: /5
+    trigger: time_pattern
+  actions:
+  - data:
+      option: "{% if is_state('binary_sensor.is_ev_charging_time', 'on') %}\n  ev_charging\n{%
+        elif is_state('binary_sensor.is_super_off_peak_time', 'on') %}\n  super_offpeak\n{%
+        elif is_state('binary_sensor.is_peak_time', 'on') %}\n  peak\n{% else %}\n
+        \ offpeak\n{% endif %}"
+    action: select.select_option
+    target:
+      entity_id: select.daily_electricity_tou_tariff
+  mode: single
+- id: update_openuv
+  alias: OpenUV - Update OpenUV
+  description: ''
+  trigger:
+  - platform: time_pattern
+    minutes: /15
+  condition:
+  - condition: sun
+    after: sunrise
+    before: sunset
+    before_offset: +00:45:00
+  - condition: template
+    value_template: "{{\n  state_attr('automation.update_openuv', 'last_triggered')
+      == None\n  or (\n    now() - state_attr('automation.update_openuv', 'last_triggered')\n
+      \ ) >= timedelta(minutes=30)\n}}"
+  action:
+  - service: homeassistant.update_entity
+    target:
+      entity_id:
+      - sensor.openuv_current_uv_index
+      - binary_sensor.openuv_protection_window
+    data: {}
+- id: '1676536353214'
+  alias: Eufy - Activate Camera Away Mode
+  description: Arms Eufy cameras to 'Away' mode when both residents leave the home
+    and the alarm is already set to 'Home' mode, and sends a fun notification about
+    the cat being in charge.
+  triggers:
+  - entity_id: person.hendy
+    zone: zone.home
+    event: leave
+    trigger: zone
+  - entity_id: person.mimi_ly
+    zone: zone.home
+    event: leave
+    trigger: zone
+  - trigger: state
+    entity_id:
+    - device_tracker.mimi_s_iphone
+    from: home
+    to: not_home
+  conditions:
+  - condition: and
+    conditions:
+    - condition: not
+      conditions:
+      - condition: zone
+        entity_id: person.hendy
+        zone: zone.home
+    - condition: not
+      conditions:
+      - condition: zone
+        entity_id: person.mimi_ly
+        zone: zone.home
+  - condition: device
+    device_id: 2ecfc01316cec940cfa19ea3042fed8d
+    domain: alarm_control_panel
+    entity_id: 3f3485dbe0268acd0d2eb396e1444420
+    type: is_armed_home
+    enabled: true
+  actions:
+  - action: conversation.process
+    metadata: {}
+    data:
+      agent_id: conversation.google_generative_ai
+      text: send a notification to note that Hendy and Mimi has left the house and
+        the house alarm has been armed. Be creative and funny..
+    response_variable: wresponse
+  - device_id: 2ecfc01316cec940cfa19ea3042fed8d
+    domain: alarm_control_panel
+    entity_id: 3f3485dbe0268acd0d2eb396e1444420
+    type: arm_away
+  - device_id: 8d1f75588762b2a880a51f6088ff155f
+    domain: alarm_control_panel
+    entity_id: 4a68a346747dab93937619bc80ad09e1
+    type: arm_away
+  - device_id: d6f7a2b057a075c29bdd645e6c4484d3
+    domain: alarm_control_panel
+    entity_id: 5598259bc1f8b3df2b8779ea5827b9ea
+    type: arm_away
+  mode: single
+- id: '1676536410893'
+  alias: Eufy - Activate Camera Home Mode
+  description: Activates 'Home Mode' for Eufy cameras and sends arrival notifications
+    when residents return home and the system was armed away.
+  triggers:
+  - entity_id: person.hendy
+    zone: zone.home
+    event: enter
+    trigger: zone
+  - entity_id: person.mimi_ly
+    zone: zone.home
+    event: enter
+    trigger: zone
+  - trigger: state
+    entity_id:
+    - device_tracker.mimi_s_iphone
+    from:
+    to: home
+  - entity_id:
+    - sensor.doorbell_person_name
+    to: Mimi
+    trigger: state
+  - entity_id:
+    - sensor.frontyard_person_name
+    to: Mimi
+    trigger: state
+  - entity_id:
+    - sensor.doorbell_person_name
+    to: Hendy
+    trigger: state
+  - entity_id:
+    - sensor.frontyard_person_name
+    to: Hendy
+    trigger: state
+  conditions:
+  - condition: or
+    conditions:
+    - condition: zone
+      entity_id: person.hendy
+      zone: zone.home
+    - condition: zone
+      entity_id: person.mimi_ly
+      zone: zone.home
+    - condition: state
+      entity_id: device_tracker.mimi_s_iphone
+      state: home
+    - condition: state
+      entity_id: sensor.frontyard_person_name
+      state: Mimi
+    - condition: state
+      entity_id: sensor.frontyard_person_name
+      state: Charlotte
+    - condition: state
+      entity_id: sensor.frontyard_person_name
+      state: Hendy
+    - condition: and
+      conditions:
+      - condition: state
+        entity_id: sensor.home_mimi_ly_direction_of_travel
+        state: towards
+      - condition: numeric_state
+        entity_id: sensor.home_mimi_ly_distance
+        below: 2000
+  - condition: or
+    conditions:
+    - condition: device
+      device_id: 2ecfc01316cec940cfa19ea3042fed8d
+      domain: alarm_control_panel
+      entity_id: 3f3485dbe0268acd0d2eb396e1444420
+      type: is_armed_away
+    - condition: device
+      device_id: d6f7a2b057a075c29bdd645e6c4484d3
+      domain: alarm_control_panel
+      entity_id: 5598259bc1f8b3df2b8779ea5827b9ea
+      type: is_armed_away
+    - condition: device
+      device_id: 8d1f75588762b2a880a51f6088ff155f
+      domain: alarm_control_panel
+      entity_id: 4a68a346747dab93937619bc80ad09e1
+      type: is_armed_away
+  actions:
+  - choose:
+    - conditions:
+      - condition: and
+        conditions:
+        - condition: zone
+          entity_id: person.hendy
+          zone: zone.home
+        - condition: or
+          conditions:
+          - condition: zone
+            entity_id: person.mimi_ly
+            zone: zone.home
+          - condition: state
+            entity_id: device_tracker.mimi_s_iphone
+            state: home
+      sequence:
+      - action: conversation.process
+        metadata: {}
+        data:
+          agent_id: conversation.qwen2_5_7b_instruct_q6_k
+          text: send a short notification to note that Hendy and Mimi have arrived
+            home and the house alarm has been disarmed. Be creative and funny.
+        response_variable: wresponse
+    - conditions:
+      - condition: zone
+        entity_id: person.hendy
+        zone: zone.home
+      sequence:
+      - action: conversation.process
+        metadata: {}
+        data:
+          agent_id: conversation.google_generative_ai
+          text: send a short notification to note that Hendy has arrived home and
+            the house alarm has been disarmed. Be creative and funny.
+        response_variable: wresponse
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: zone
+          entity_id: person.mimi_ly
+          zone: zone.home
+        - condition: state
+          entity_id: device_tracker.mimi_s_iphone
+          state: home
+      sequence:
+      - action: conversation.process
+        metadata: {}
+        data:
+          text: send a notification to note that Mimi has arrived home and the house
+            alarm has been disarmed. Be creative and funny.
+          agent_id: conversation.google_generative_ai
+        response_variable: wresponse
+  - device_id: 2ecfc01316cec940cfa19ea3042fed8d
+    domain: alarm_control_panel
+    entity_id: 3f3485dbe0268acd0d2eb396e1444420
+    type: arm_home
+  - device_id: 8d1f75588762b2a880a51f6088ff155f
+    domain: alarm_control_panel
+    entity_id: 4a68a346747dab93937619bc80ad09e1
+    type: arm_home
+  - device_id: d6f7a2b057a075c29bdd645e6c4484d3
+    domain: alarm_control_panel
+    entity_id: 5598259bc1f8b3df2b8779ea5827b9ea
+    type: arm_home
+  - data:
+      title: Home Assistant
+      message: '{{ wresponse.response.speech.plain.speech }}'
+    action: script.send_notification_to_phone
+    enabled: false
+  mode: single
+- id: '1676677985958'
+  alias: Tesla Powerwall - Send notification when fully charged
+  description: ''
+  triggers:
+  - type: battery_level
+    device_id: fe5da74ce73c7e9371742c8a92f870d4
+    entity_id: 24d8988b8ca48dcdeac3e4a37f4d775e
+    domain: sensor
+    above: 99
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+    trigger: device
+  conditions: []
+  actions:
+  - action: conversation.process
+    metadata: {}
+    data:
+      agent_id: conversation.google_generative_ai
+      text: The house battery has been charging off solar and from the grid electricity.
+        Both the Tesla Powerwall batteries are now fully charged. Can you send me
+        a notification to let me know that the Tesla Powerwall batteries are fully
+        charged. Be creative and funny.
+    response_variable: wresponse
+  mode: single
+- id: '1676770885431'
+  alias: Tesla Powerwall - Grid Outage Notification
+  description: ''
+  triggers:
+  - entity_id:
+    - binary_sensor.grid_status
+    from: 'on'
+    to: 'off'
+    trigger: state
+  conditions: []
+  actions:
+  - action: conversation.process
+    metadata: {}
+    data:
+      agent_id: conversation.google_generative_ai
+      text: Can you send me a notification to let me know that there is an electricity
+        grid outage and the house is now being powered by the Tesla Powerwall battery.
+        Be creative and funny.
+    response_variable: wresponse
+  mode: single
+- id: '1676770912088'
+  alias: Tesla Powerwall - Grid Restoration Notification
+  description: ''
+  triggers:
+  - entity_id:
+    - binary_sensor.grid_status
+    from: 'off'
+    to: 'on'
+    trigger: state
+  conditions: []
+  actions:
+  - action: conversation.process
+    metadata: {}
+    data:
+      agent_id: conversation.qwen2_5_7b_instruct_q6_k
+      text: Can you send me a notification to let me know that the electricity grid
+        is back online and the house is now connected back to the Grid and no longer
+        relying on the Tesla Powerwall battery. Be creative and funny.
+    response_variable: wresponse
+  mode: single
+- id: restart_tuya
+  alias: Tuya - Restart Integration
+  description: Periodically reload Tuya integration to refresh sensor values
+  triggers:
+  - minutes: /6
+    trigger: time_pattern
+  conditions: []
+  actions:
+  - data:
+      entry_id: 28024e6b7ed3a604e625b4c9afdef004
+    action: homeassistant.reload_config_entry
+  mode: single
+- id: '1684924374296'
+  alias: Tesla Powerwall - Send notification when fully depleted
+  description: ''
+  triggers:
+  - type: battery_level
+    device_id: 836155175a43b069d89f4094fab26c21
+    entity_id: 0e64e0b5dcdf35f89caa14e34db03fde
+    domain: sensor
+    trigger: device
+    below: 1
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 15
+  conditions: []
+  actions:
+  - action: conversation.process
+    metadata: {}
+    data:
+      agent_id: conversation.google_generative_ai
+      text: Can you send me a notification to let me know that the house battery has
+        been discharging and now both the Tesla Powerwall batteries are fully depleted.
+        Be creative and funny.
+    response_variable: wresponse
+  mode: single
+- id: '1685410378033'
+  alias: Roborock - Reload integration when entities become unavailable
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.pacman_status
+    to: unavailable
+    for:
+      hours: 1
+      minutes: 0
+      seconds: 0
+    trigger: state
+  conditions: []
+  actions:
+  - data:
+      entry_id: 01J93S3FPPYM9APMDEX5RH96KY
+    action: homeassistant.reload_config_entry
+  mode: single
+- id: '1696742197989'
+  alias: Tesla Powerwall - Send notification when solar generation has ended
+  description: ''
+  triggers:
+  - event: sunset
+    trigger: sun
+    offset: 00:01:30
+  conditions: []
+  actions:
+  - action: conversation.process
+    metadata: {}
+    data:
+      text: Can you please send me a  notification noting that the sun has set, today's
+        solar panel has generated {{ states('sensor.solar_generation', with_unit=True,
+        rounded=True) }} and the Tesla Powerwall home battery charge level is at {{
+        states('sensor.the_abode_battery', with_unit=True, rounded=True) }}. Be creative
+        and funny.
+      agent_id: conversation.google_generative_ai
+  mode: single
+- id: '1696742397319'
+  alias: Tesla Powerwall - Send notification when solar generation has started
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunrise
+    offset: 00:01:30
+  conditions: []
+  actions:
+  - action: conversation.process
+    data:
+      agent_id: conversation.google_generative_ai
+      text: Can you send me a notification to let me know that the sun is up, the
+        solar panels are now generating power, the house solar panels are forecasted
+        to generate {{ states('sensor.solcast_pv_forecast_forecast_remaining_today',
+        with_unit=True, rounded=True) }} today and {{ states('sensor.grid_import',
+        with_unit=True, rounded=True) }} has been imported from the grid. The house
+        Tesla Powerwall battery charge level is at {{ states('sensor.powerwall_charge_actual',
+        with_unit=True, rounded=True) }}% and today's weather forecast is "{{ states('sensor.bardwell_park_extended_text_0')
+        }}" Be creative and funny.
+    response_variable: wresponse
+  mode: single
+- id: '1696742690523'
+  alias: Tesla Powerwall - Set Powerwall reserve to 100% to charge batteries
+  description: ''
+  triggers:
+  - at: '11:00:00'
+    trigger: time
+  conditions: []
+  actions:
+  - device_id: fe5da74ce73c7e9371742c8a92f870d4
+    domain: number
+    entity_id: 168e9ccf201952396bf2d980409f1cdc
+    type: set_value
+    value: 100
+  mode: single
+- id: '1698394501143'
+  alias: Roborock - Send notification when Roborock Q Revo has finished cleaning
+  description: ''
+  triggers:
+  - entity_id:
+    - vacuum.pacman
+    from: cleaning
+    to: returning
+    enabled: false
+    trigger: state
+  - entity_id:
+    - sensor.pacman_status
+    from: segment_cleaning
+    to: returning_home
+    enabled: false
+    trigger: state
+  - entity_id:
+    - sensor.pacman_status
+    from: cleaning
+    to: charging
+    enabled: false
+    trigger: state
+  - entity_id:
+    - sensor.pacman_status
+    from: segment_cleaning
+    to: charging
+    enabled: false
+    trigger: state
+  - entity_id:
+    - vacuum.pacman
+    to: returning
+    trigger: state
+    from: cleaning
+  conditions:
+  - condition: not
+    conditions:
+    - condition: state
+      entity_id: sensor.pacman_status
+      state: error
+  actions:
+  - action: conversation.process
+    metadata: {}
+    data:
+      agent_id: conversation.google_generative_ai
+      text: "Can you send me a notification to let me know that my robot vacuum, named
+        Pacman has finished cleaning and {{ states('sensor.pacman_cleaning_area',
+        rounded=True) }}m² has been cleaned. The total cleaning time was {{ states('sensor.pacman_cleaning_time')
+        | int(0)   | timestamp_custom('%-H h %-M min %-S sec', false)   | regex_replace('(^0
+        h| 0 min| 0 sec$)', '')   | regex_replace('(^ )', '') }}  \n\nBe creative
+        and funny."
+    response_variable: wresponse
+  mode: single
+- id: '1706175229633'
+  alias: Tesla Powerwall - Top up Powerwall if battery level reaches 30% between 4:30am
+    and 5:30am
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.the_abode_battery
+    below: 30
+    trigger: numeric_state
+  - at: 04:30:00
+    trigger: time
+  conditions:
+  - condition: time
+    after: 04:30:00
+    before: 05:30:00
+  - condition: numeric_state
+    entity_id: sensor.the_abode_battery
+    below: 30
+  actions:
+  - data:
+      value: '40'
+    action: number.set_value
+    target:
+      entity_id: number.the_abode_backup_reserve
+  mode: single
+- id: '1709277507741'
+  alias: Tesla Powerwall - Control EV charge rate based on house power load
+  description: ''
+  use_blueprint:
+    path: DataBitz/tesla-controlled-charge-rate-based-on-power-sensor.yaml
+    input:
+      power_sensor_1_entity: sensor.powerwall_load_now
+      power_sensor_1_max_value: 15
+      power_sensor_1_charge_upper_value: 14
+      power_sensor_1_charge_lower_value: 11
+      polling_time: /1
+      tesla_charging_state_entity: binary_sensor.tesla_wall_connector_contactor_closed
+      tesla_charging_amps_number_entity: number.baymax_charging_amps
+      tesla_charging_amps_upper_value: 32
+      tesla_charging_amps_lower_value: 20
+      tesla_device_tracker_entity: device_tracker.baymax_location_tracker
+      power_sensor_2_entity: sensor.powerwall_load_now
+      power_sensor_2_max_value: 15
+- id: '1709289814262'
+  alias: Home Assistant - Send notification when dishwasher has finished a cycle
+  description: ''
+  use_blueprint:
+    path: Blackshome/appliance-notifications.yaml
+    input:
+      power_sensor: sensor.dishwasher_current_consumption
+      start_appliance_power: 20
+      start_time_delay: 1
+      end_appliance_power: 5
+      include_end_notify: disable_end_notify_options
+      end_notify_device:
+      - b78720f4fee0769affccb3a5c0668ec3
+      end_message_title: Home Assistant
+      include_power_tracking: disable_power_tracking
+      end_time_delay: 5
+      include_custom_actions:
+      - enable_end_custom_actions
+      end_custom_actions:
+      - action: conversation.process
+        metadata: {}
+        data:
+          agent_id: conversation.google_generative_ai
+          text: Send me a short notification notifying me that the dishwasher has
+            been running to wash the dirty dishes and is now finished a cycle. Please
+            unload the dishwasher. Be creative and funny.
+        response_variable: wresponse
+- id: '1709331298436'
+  alias: Tesla Powerwall - Enable automation to control EV charging rate during super
+    off peak period
+  description: ''
+  triggers:
+  - at: '11:00:00'
+    trigger: time
+  conditions:
+  - condition: state
+    entity_id: automation.tesla_powerwall_control_ev_charge_rate_based_on_house_power_load
+    state: 'off'
+  - condition: zone
+    entity_id: device_tracker.tesla_location
+    zone: zone.home
+  actions:
+  - metadata: {}
+    data: {}
+    target:
+      entity_id: automation.tesla_powerwall_control_ev_charge_rate_based_on_house_power_load
+    action: automation.toggle
+  mode: single
+- id: '1709331391045'
+  alias: Tesla Powerwall - Disable automation to control EV charging rate during super
+    off peak period
+  description: ''
+  triggers:
+  - at: '14:00:00'
+    trigger: time
+  conditions:
+  - condition: state
+    entity_id: automation.tesla_powerwall_control_ev_charge_rate_based_on_house_power_load
+    state: 'on'
+  actions:
+  - metadata: {}
+    data: {}
+    target:
+      entity_id: automation.tesla_powerwall_control_ev_charge_rate_based_on_house_power_load
+    action: automation.toggle
+  mode: single
+- id: '1709377236813'
+  alias: Home Assistant - Turn off all lights and open shades at sunrise
+  description: ''
+  triggers:
+  - event: sunrise
+    offset: 0
+    trigger: sun
+  conditions: []
+  actions:
+  - action: script.turn_off_lights_all_lights
+  - repeat:
+      count: 2
+      sequence:
+      - data: {}
+        target:
+          entity_id:
+          - cover.living_room_door_shade_left
+          - cover.living_room_door_shade_right
+          - cover.living_room_window_shade
+        action: cover.open_cover
+      - wait_template: "{% set covers = [\n  'cover.living_room_door_shade_left',\n
+          \ 'cover.living_room_door_shade_right',\n  'cover.living_room_window_shade'\n]
+          %} {{ covers | map('states') | select('eq', 'open') | list | count == 3
+          }}\n"
+        timeout: 00:00:20
+        continue_on_timeout: true
+    enabled: false
+  mode: single
+- id: '1709457596009'
+  alias: Home Assistant - Turn on night lights and close shades at sunset
+  description: 'At sunset (-30min), sets night lighting (Monitor 10% always, others
+    depend on TV) and closes all shades.
+
+    '
+  triggers:
+  - trigger: sun
+    event: sunset
+    offset: -00:30:00
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: switch.wake_up_tv
+        state: 'on'
+      sequence:
+      - action: light.turn_on
+        target:
+          entity_id: light.hue_play_monitor_lights
+        data:
+          brightness_pct: 10
+      - action: light.turn_on
+        target:
+          entity_id:
+          - light.living_room_light
+          - light.downstairs_living_room_light
+        data:
+          brightness_pct: 5
+    - conditions: []
+      sequence:
+      - action: script.turn_on_lights_living_room_d_s_living_room_tv_led_strip
+        data: {}
+      - action: light.turn_on
+        target:
+          entity_id: light.hue_play_monitor_lights
+        data:
+          brightness_pct: 10
+  - repeat:
+      count: 2
+      sequence:
+      - action: cover.close_cover
+        target:
+          entity_id:
+          - cover.living_room_window_shade
+          - cover.living_room_door_shade_left
+          - cover.living_room_door_shade_right
+        data: {}
+        enabled: true
+      - wait_template: "{% set covers = [\n  'cover.living_room_window_shade',\n  'cover.living_room_door_shade_left',\n
+          \ 'cover.living_room_door_shade_right'\n] %} {{ covers | map('states') |
+          select('eq', 'closed') | list | count == 3 }}\n"
+        timeout: 00:00:20
+        continue_on_timeout: true
+    enabled: false
+  mode: single
+- id: '1709457666985'
+  alias: Home Assistant - Turn on bedroom lights at night
+  description: ''
+  triggers:
+  - event: sunset
+    offset: -00:15:00
+    trigger: sun
+  - trigger: time
+    at: '19:00:00'
+  conditions:
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: light.kids_room_light
+      state: 'off'
+    - condition: state
+      entity_id: light.master_bedroom_light_1
+      state: 'off'
+    enabled: false
+  actions:
+  - data: {}
+    action: script.1709457190585
+  mode: single
+- id: '1709537176468'
+  alias: Home Assistant - Turn on TV LED strip when TV turns on
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - switch.wake_up_tv
+    to: 'on'
+    enabled: true
+    from: 'off'
+  - platform: numeric_state
+    entity_id:
+    - sensor.living_room_tv_current_consumption
+    above: 50
+  condition: []
+  action:
+  - type: turn_on
+    device_id: 0e5b105dbeed9ae9975a68fc80278dfb
+    entity_id: a1d8a33937de545c50cf0ca0cab7de35
+    domain: light
+    brightness_pct: 75
+  mode: single
+- id: '1709537557413'
+  alias: Home Assistant - Turn off or dim TV LED strip when TV is turned off
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - switch.wake_up_tv
+    to: 'off'
+    enabled: true
+    from: 'on'
+  - platform: numeric_state
+    entity_id:
+    - sensor.living_room_tv_current_consumption
+    below: 50
+  condition: []
+  action:
+  - if:
+    - condition: sun
+      before: sunset
+      after: sunrise
+      before_offset: -00:45:00
+    then:
+    - type: turn_off
+      device_id: 0e5b105dbeed9ae9975a68fc80278dfb
+      entity_id: a1d8a33937de545c50cf0ca0cab7de35
+      domain: light
+    else:
+    - type: turn_on
+      device_id: 0e5b105dbeed9ae9975a68fc80278dfb
+      entity_id: a1d8a33937de545c50cf0ca0cab7de35
+      domain: light
+      brightness_pct: 10
+  mode: single
+- id: '1709715830504'
+  alias: Home Assistant - Switch D/S Living Room light on based on occupancy
+  description: Controls living room light brightness based on occupancy during night
+    hours.
+  triggers:
+  - entity_id: binary_sensor.d_s_living_room_presence_sensor_occupancy
+    from: 'off'
+    to: 'on'
+    id: Room Occupied
+    trigger: state
+  - entity_id: binary_sensor.d_s_living_room_presence_sensor_occupancy
+    from: 'on'
+    to: 'off'
+    id: Room Cleared
+    trigger: state
+  conditions:
+  - condition: sun
+    before: sunrise
+    after: sunset
+    after_offset: -00:45:00
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: Room Cleared
+      sequence:
+      - target:
+          entity_id: d12341aac1487070be99c852821bd42d
+        data:
+          brightness_pct: 5
+        action: light.turn_on
+    - conditions:
+      - condition: trigger
+        id: Room Occupied
+      sequence:
+      - target:
+          entity_id: d12341aac1487070be99c852821bd42d
+        data:
+          brightness_pct: 15
+        action: light.turn_on
+  mode: single
+- id: '1710503284498'
+  alias: Home Assistant - Switch Home Office light based on occupancy
+  description: 'Occupied: Main light (dim/bright based on helper) + Monitor lights
+    100%. Cleared: Main light OFF + Monitor lights 10%.'
+  triggers:
+  - entity_id: binary_sensor.home_office_presence_sensor_occupancy
+    to: 'on'
+    id: occupied
+    trigger: state
+  - entity_id: binary_sensor.home_office_presence_sensor_occupancy
+    to: 'off'
+    id: cleared
+    trigger: state
+  conditions:
+  - condition: sun
+    before: sunrise
+    after: sunset
+    after_offset: -00:45:00
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: occupied
+      sequence:
+      - action: light.turn_on
+        target:
+          entity_id: light.hue_play_monitor_lights
+        data:
+          brightness_pct: 100
+      - if:
+        - condition: state
+          entity_id: input_boolean.home_office_light_high_brightness
+          state: 'on'
+        then:
+        - action: light.turn_on
+          target:
+            entity_id: light.home_office_light
+          data:
+            brightness_pct: 80
+        else:
+        - action: light.turn_on
+          target:
+            entity_id: light.home_office_light
+          data:
+            brightness_pct: 10
+    - conditions:
+      - condition: trigger
+        id: cleared
+      sequence:
+      - action: light.turn_off
+        target:
+          entity_id: light.home_office_light
+      - action: light.turn_on
+        target:
+          entity_id: light.hue_play_monitor_lights
+        data:
+          brightness_pct: 10
+  mode: restart
+- id: '1710551927718'
+  alias: Home Assistant - Switch Living Room light on based on occupancy
+  description: Updated to use state triggers for easier maintenance
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.living_room_presence_sensor_occupancy
+    from: 'off'
+    to: 'on'
+    id: Room Occupied
+  - trigger: state
+    entity_id: binary_sensor.living_room_presence_sensor_occupancy
+    from: 'on'
+    to: 'off'
+    id: Room Cleared
+  conditions:
+  - condition: sun
+    before: sunrise
+    after: sunset
+    after_offset: -00:45:00
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - Room Cleared
+      sequence:
+      - action: light.turn_on
+        target:
+          entity_id: light.living_room_light
+        data:
+          brightness_pct: 5
+    - conditions:
+      - condition: trigger
+        id:
+        - Room Occupied
+      sequence:
+      - action: light.turn_on
+        target:
+          entity_id: light.living_room_light
+        data:
+          brightness_pct: 15
+  mode: single
+- id: '1712401437168'
+  alias: UPS - Send critical notification when UPS1 (Network UPS) is running on battery
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.ups1_status_data
+    from:
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+    trigger: state
+    to: OB DISCHRG
+  conditions: []
+  actions:
+  - action: conversation.process
+    metadata: {}
+    data:
+      text: Can you send me a short, funny and random notification to let me know
+        that the network UPS powering all the network devices is operating on battery
+        with battery {{ states('sensor.ups1_runtime_friendly') }} runtime remaining.
+      agent_id: conversation.qwen2_5_7b_instruct_q6_k
+    response_variable: wresponse
+  mode: single
+- id: '1712401730344'
+  alias: UPS - Send critical notification when UPS2 (Server Cluster UPS) is running
+    on battery
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.ups2_status_data
+    from:
+    to: OB DISCHRG
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+    trigger: state
+  conditions: []
+  actions:
+  - action: conversation.process
+    metadata: {}
+    data:
+      text: Can you send me a short, funny and random notification to let me know
+        that the server cluster UPS powering the homelab server cluster is operating
+        on battery with battery {{ states('sensor.ups2_runtime_friendly') }} runtime
+        remaining.
+      agent_id: conversation.qwen2_5_7b_instruct_q6_k
+    response_variable: wresponse
+  mode: single
+- id: '1712402012495'
+  alias: UPS - Send critical notification when UPS3 (Proxmox Primary UPS) is running
+    on battery
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.ups3_status_data
+    from:
+    to: OB DISCHRG
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+    trigger: state
+  conditions: []
+  actions:
+  - action: conversation.process
+    metadata: {}
+    data:
+      text: Can you send me a short, funny and random notification to let me know
+        that the primary homelab server UPS powering the primary homelab server is
+        now operating on battery with {{ states('sensor.ups3_runtime_friendly') }}
+        runtime remaining.
+      agent_id: conversation.qwen2_5_7b_instruct_q6_k
+    response_variable: wresponse
+  mode: single
+- id: '1712402135691'
+  alias: UPS - Send critical notification when UPS4 (Media Cabinet UPS) is running
+    on battery
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.ups4_status_data
+    from:
+    to: OB DISCHRG
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+    trigger: state
+  conditions: []
+  actions:
+  - action: conversation.process
+    metadata: {}
+    data:
+      text: Can you send me a short, funny and random notification to let me know
+        that the media cabinet UPS powering all the media cabinet devices such as
+        Nintendo Switch, XBOX, Network Attached Storage is now operating on battery
+        with {{ states('sensor.ups4_runtime_friendly') }} runtime remaining.
+      agent_id: conversation.qwen2_5_7b_instruct_q6_k
+    response_variable: wresponse
+  mode: single
+- id: '1712402188309'
+  alias: UPS - Send critical notification when UPS5 (Home Office UPS) is running on
+    battery
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.ups5_status_data
+    from:
+    to: OB DISCHRG
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+    trigger: state
+  conditions: []
+  actions:
+  - action: conversation.process
+    metadata: {}
+    data:
+      text: Can you send me a short, funny and random notification to let me know
+        that the home office UPS powering the home office PC and work laptop is now
+        operating on battery with {{ states('sensor.ups5_runtime_friendly') }} runtime
+        remaining.
+      agent_id: conversation.qwen2_5_7b_instruct_q6_k
+    response_variable: wresponse
+  mode: single
+- id: '1719580389305'
+  alias: Tesla - Wake up car in the morning
+  description: Wake Baymax and activate Sentry Mode if at home and not already connected.
+  triggers:
+  - at: 06:00:00
+    trigger: time
+  conditions:
+  - condition: state
+    entity_id: device_tracker.baymax_location
+    state: home
+  - condition: or
+    conditions:
+    - condition: not
+      conditions:
+      - condition: state
+        entity_id: binary_sensor.baymax_online
+        state: 'on'
+    - condition: not
+      conditions:
+      - condition: state
+        entity_id: switch.baymax_sentry_mode_2
+        state: 'on'
+  actions:
+  - action: script.activate_sentry_mode_wake
+    data: {}
+  mode: single
+- id: '1728505641058'
+  alias: Amber - Reload integration when stale
+  description: ''
+  triggers:
+  - value_template: '{{ (as_timestamp(now())-as_timestamp(states.sensor[''amber_feed_in_price''].last_updated))/60
+      > 15 }}'
+    trigger: template
+  conditions: []
+  actions:
+  - metadata: {}
+    data: {}
+    action: homeassistant.reload_config_entry
+    target:
+      entity_id: sensor.home_feed_in_price
+  mode: single
+- id: '1731537118014'
+  alias: Tesla Powerwall - Send notification when Powerwall integration is unavailable
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.powerwall_status
+    to: unavailable
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+  conditions: []
+  actions:
+  - data:
+      title: Tesla Powerwall
+      message: Tesla Powerwall integration has become unavailable
+    action: script.send_notification_to_phone
+  mode: single
+- id: '1749122341578'
+  alias: Tesla Powerwall - Set Powerwall to time based control to allow grid charging
+  description: ''
+  triggers:
+  - at: '10:58:30'
+    trigger: time
+  - trigger: time
+    at: 00:00:00
+  conditions: []
+  actions:
+  - device_id: fe5da74ce73c7e9371742c8a92f870d4
+    domain: select
+    entity_id: select.the_abode_operation_mode
+    type: select_option
+    option: Time-Based Control
+    enabled: true
+  mode: single
+- id: '1749122654578'
+  alias: Tesla Powerwall - Set to Self-Powered mode before peak tariffs
+  description: Sets Powerwall to self-powered before peak tariffs and retries if necessary
+  triggers:
+  - at: 05:45:00
+    trigger: time
+  - at: '13:59:45'
+    trigger: time
+  conditions: []
+  actions:
+  - repeat:
+      count: 3
+      sequence:
+      - target:
+          entity_id: select.the_abode_operation_mode
+        data:
+          option: Self-Powered
+        action: select.select_option
+      - delay: 00:00:10
+      - condition: state
+        entity_id: select.the_abode_operation_mode
+        state: Self-Powered
+      - stop: Powerwall successfully set to Self-Powered
+  mode: single
+- id: '1749212909672'
+  alias: Home Assistant - Weather Forecast
+  description: Generates a daily weather forecast summary using AI.
+  triggers:
+  - at: 06:30:00
+    trigger: time
+    enabled: true
+  conditions: []
+  actions:
+  - action: weather.get_forecasts
+    metadata: {}
+    data:
+      type: daily
+    response_variable: wx
+    target:
+      entity_id:
+      - weather.bardwell_park
+  - action: conversation.process
+    metadata: {}
+    data:
+      text: '{% set today_fc = wx[''weather.bardwell_park''][''forecast''][0] if wx
+        and wx.get(''weather.bardwell_park'') else {} %}
+
+
+        Can you send me a short notification to summarise today''s weather, include
+        the temperature {{ today_fc | to_json }}. Be creative and funny.
+
+        '
+      agent_id: conversation.google_generative_ai
+    response_variable: wresponse
+  mode: single
+- id: '1749214276877'
+  alias: Home Assistant - Solar Production Forecast Notification
+  description: Sends a daily notification about the solar production forecast and
+    weather, generated by AI.
+  triggers:
+  - at: '22:00:00'
+    trigger: time
+    enabled: true
+  conditions: []
+  actions:
+  - variables:
+      solar_forecast: '{{ states(''sensor.solcast_pv_forecast_forecast_tomorrow'')
+        | float }}'
+      battery_capacity: '{{ states(''sensor.the_abode_battery_capacity'') | float
+        }}'
+      solar_percentage: '{{ (solar_forecast / battery_capacity * 100) | round(0) }}'
+      max_temp: '{{ states(''sensor.bardwell_park_temp_max_1'') | float | round(0)
+        }}'
+      weather_forecast: '{{ states(''sensor.bardwell_park_extended_text_1'') }}'
+  - data:
+      agent_id: conversation.google_generative_ai
+      text: 'Ok, tomorrow''s solar production is forecasted to be {{ solar_forecast
+        | round(1) }} kWh, your battery holds {{ battery_capacity | round(1) }} kWh.
+        The solar production will be enough to add around {{ solar_percentage }}%
+        of the battery. The maximum temperature will be {{ max_temp }}°C and the weather
+        forecast for tomorrow is “{{ weather_forecast }}”.
+
+
+        Can you please send me a nice, short funny notification summarising solar
+        forecast and weather. Be creative and funny.
+
+
+        CRITICAL FORMATTING RULES:
+
+        1. Write exactly ONE single paragraph.
+
+        2. Do NOT use headers, titles, or bold text (like **Alert**).
+
+        3. Do NOT use line breaks or newlines.'
+    action: conversation.process
+  mode: single
+- id: '1749556631281'
+  alias: Tesla - Notify When Fully Charged
+  description: Sends a notification when Baymax is charged to 100%
+  triggers:
+  - entity_id: sensor.baymax_battery_level
+    above: 99.9
+    trigger: numeric_state
+  conditions:
+  - condition: template
+    value_template: '{{ states(''sensor.baymax_battery_level'') | float(0) == 100
+      }}'
+  actions:
+  - action: conversation.process
+    metadata: {}
+    data:
+      text: 'Baymax, my Tesla car has just finished charging and its battery level
+        is now 100%. Can you please send me a short, random and funny notification
+        on this. You can also add a pun or emoji for fun. CRITICAL FORMATTING RULES:
+        1. Write exactly ONE single paragraph. 2. Do NOT use headers, titles, or bold
+        text (like **Alert**). 3. Do NOT use line breaks or newlines.'
+      agent_id: conversation.qwen2_5_7b_instruct_q6_k
+  mode: single
+- id: 75f65bdb96e44027bd9106ed9369f858
+  alias: Tesla - Track energy added at home
+  description: Increments energy added only when charging at home
+  triggers:
+  - minutes: /1
+    trigger: time_pattern
+  conditions:
+  - condition: state
+    entity_id: device_tracker.baymax_location_tracker
+    state: home
+  - condition: state
+    entity_id: binary_sensor.tesla_wall_connector_vehicle_connected
+    state: 'on'
+  actions:
+  - alias: Update helper if energy increased
+    choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ current_energy > (states(''input_number.last_energy_added_home'')
+          | float(0)) }}
+
+          '
+      sequence:
+      - target:
+          entity_id: input_number.tesla_model_y_energy_added_home
+        data:
+          value: "{{ (states('input_number.tesla_model_y_energy_added_home') | float(0))
+            +\n   (current_energy - states('input_number.last_energy_added_home')
+            | float(0)) | round(1) }}\n"
+        action: input_number.set_value
+  - alias: Update last energy tracker
+    data:
+      value: '{{ current_energy }}'
+    action: input_number.set_value
+    target:
+      entity_id: input_number.last_energy_added_home
+  mode: single
+  variables:
+    current_energy: '{{ states(''sensor.baymax_energy_added'') | float(0) }}'
+- id: orchestrate_downstairs_ac
+  alias: Home Assistant - Toggle downstairs AC units
+  description: When the master switch is toggled, issue turn_on/turn_off to both climate
+    entities.
+  triggers:
+  - entity_id: input_boolean.downstairs_ac_master
+    trigger: state
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.downstairs_ac_master
+        state: 'on'
+      sequence:
+      - target:
+          entity_id:
+          - climate.guest_bedroom_ac
+          - climate.home_office_ac
+        action: climate.turn_on
+        data: {}
+    default:
+    - target:
+        entity_id:
+        - climate.guest_bedroom_ac
+        - climate.home_office_ac
+      action: climate.turn_off
+      data: {}
+- id: schedule_downstairs_ac_per_schedule
+  alias: Home Assistant - Toggle downstairs AC units per defined schedule
+  description: Fires every 15 minutes and, when the clock matches your helper times,
+    turns the two downstairs units on or off—provided the window is valid.
+  triggers:
+  - minutes: /15
+    trigger: time_pattern
+  conditions:
+  - condition: template
+    value_template: "{{ states('input_datetime.downstairs_ac_on_time')[:5]\n   !=
+      states('input_datetime.downstairs_ac_off_time')[:5] }}\n"
+  actions:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ now().strftime('%H:%M')\n   == states('input_datetime.downstairs_ac_on_time')[:5]
+          }}\n"
+      sequence:
+      - target:
+          entity_id:
+          - climate.guest_bedroom_ac
+          - climate.home_office_ac
+        action: climate.turn_on
+        data: {}
+      - action: conversation.process
+        metadata: {}
+        data:
+          agent_id: conversation.google_generative_ai
+          text: "The AC in the Home Office and the Guest Bedroom has been turned on
+            as per the defined schedule. The home office temperature is currently
+            “{{ states('sensor.home_office_temperature') | float | round(1) }}°C”
+            and the guest bedroom temperature is currently “{{ states('sensor.guest_bedroom_temperature')
+            | float | round(1) }}°C”. \n\nCan you please send me a short notification
+            notifying me of this. You can be creative and let me know if the AC will
+            cool or heat the rooms."
+        response_variable: wxresponse
+    - conditions:
+      - condition: template
+        value_template: "{{ now().strftime('%H:%M')\n   == states('input_datetime.downstairs_ac_off_time')[:5]
+          }}\n"
+      sequence:
+      - target:
+          entity_id:
+          - climate.guest_bedroom_ac
+          - climate.home_office_ac
+        action: climate.turn_off
+        data: {}
+      - action: conversation.process
+        metadata: {}
+        data:
+          agent_id: conversation.google_generative_ai
+          text: "The AC unit in the Home Office and the Guest Bedroom has been turned
+            off and the home office temperature is currently “{{ states('sensor.home_office_temperature')
+            | float | round(1) }}°C” and the guest bedroom temperature is currently
+            “{{ states('sensor.guest_bedroom_temperature') | float | round(1) }}°C”.
+            \n\nCan you please send me a nice and funny notification mentioning something
+            to do with the temperature? You can also add a pun or emoji for fun."
+        response_variable: wxresponse
+- id: update_estimated_energy_value
+  alias: Home Assistant – Update estimated energy value
+  description: Updates cumulative energy value (cost avoided – cost paid + export
+    credits)
+  triggers:
+  - minutes: /59
+    trigger: time_pattern
+  actions:
+  - target:
+      entity_id: input_number.estimated_energy_value_from_solar
+    data:
+      value: '{{ (current_solar + solar_value)  | round(2) }}'
+    action: input_number.set_value
+  - target:
+      entity_id: input_number.estimated_energy_value_from_battery
+    data:
+      value: '{{ (current_battery + battery_value)| round(2) }}'
+    action: input_number.set_value
+  - target:
+      entity_id: input_number.estimated_energy_value_from_grid
+    data:
+      value: '{{ (current_grid - grid_value)      | round(2) }}'
+    action: input_number.set_value
+  - target:
+      entity_id: input_number.estimated_energy_value_from_export
+    data:
+      value: '{{ (current_export + export_value)  | round(2) }}'
+    action: input_number.set_value
+  - target:
+      entity_id: input_number.estimated_energy_value_today
+    data:
+      value: "{{ (\n    current_solar   + solar_value +\n    current_battery + battery_value
+        -\n    (current_grid  + grid_value) +\n    current_export  + export_value\n
+        \  )|round(2) }}"
+    action: input_number.set_value
+  variables:
+    solar_kwh: '{{ states(''sensor.hourly_energy_from_solar'')|float(0) }}'
+    battery_kwh: '{{ states(''sensor.hourly_energy_from_battery'')|float(0) }}'
+    grid_kwh: '{{ states(''sensor.hourly_energy_from_grid'')|float(0) }}'
+    export_kwh: '{{ states(''sensor.hourly_energy_exported_to_grid'')|float(0) }}'
+    grid_rate: '{{ states(''sensor.ev_ovo_nsw'')|float(0) }}'
+    export_rate: '{{ states(''sensor.ovo_ev_plan_nsw_solar'')|float(0) }}'
+    solar_value: '{{ (solar_kwh   * grid_rate)  | round(4) }}'
+    battery_value: '{{ (battery_kwh * grid_rate)  | round(4) }}'
+    grid_value: '{{ (grid_kwh    * grid_rate)  | round(4) }}'
+    export_value: '{{ (export_kwh  * export_rate)| round(4) }}'
+    current_solar: '{{ states(''input_number.estimated_energy_value_from_solar'')  |
+      float(0) }}'
+    current_battery: '{{ states(''input_number.estimated_energy_value_from_battery'')|
+      float(0) }}'
+    current_grid: '{{ states(''input_number.estimated_energy_value_from_grid'')  |
+      float(0) }}'
+    current_export: '{{ states(''input_number.estimated_energy_value_from_export'')|
+      float(0) }}'
+  mode: queued
+- id: reset_estimated_energy_value_daily
+  alias: Home Assistant - Reset estimated energy value daily
+  description: Resets daily estimated energy values for solar, battery, grid, and
+    export.
+  triggers:
+  - at: 00:00:00
+    trigger: time
+  actions:
+  - target:
+      entity_id: input_number.estimated_energy_value_from_solar
+    data:
+      value: 0
+    action: input_number.set_value
+  - target:
+      entity_id: input_number.estimated_energy_value_from_battery
+    data:
+      value: 0
+    action: input_number.set_value
+  - target:
+      entity_id: input_number.estimated_energy_value_from_grid
+    data:
+      value: 0
+    action: input_number.set_value
+  - target:
+      entity_id: input_number.estimated_energy_value_today
+    data:
+      value: 0
+    action: input_number.set_value
+  - target:
+      entity_id: input_number.estimated_energy_value_from_export
+    data:
+      value: 0
+    action: input_number.set_value
+- id: '1750504332669'
+  alias: Tesla Powerwall - [Off-peak] Top up Powerwall at off peak
+  description: ''
+  triggers:
+  - at: 02:40:00
+    trigger: time
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.the_abode_battery
+    below: 50
+  actions:
+  - data:
+      value: '45'
+    action: number.set_value
+    target:
+      entity_id: number.the_abode_backup_reserve
+  mode: single
+- id: '1750504498449'
+  alias: Tesla Powerwall - [Off-peak] Set Powerwall reserve to 0% after top up
+  description: ''
+  triggers:
+  - at: 03:20:00
+    trigger: time
+  conditions: []
+  actions:
+  - device_id: fe5da74ce73c7e9371742c8a92f870d4
+    domain: number
+    entity_id: 168e9ccf201952396bf2d980409f1cdc
+    type: set_value
+    value: 0
+  mode: single
+- id: '1751257817601'
+  alias: Home Assistant - Calendar Notifications & Actions (Family)
+  description: ''
+  use_blueprint:
+    path: Blackshome/calendar-notifications-and-actions.yaml
+    input:
+      calendar: calendar.family
+      include_calendar_trigger: disable_key_word
+      start_calendar_offset:
+        hours: 0
+        minutes: -20
+        seconds: 0
+        days: 0
+      include_start_auto_actions:
+      - enable_start_action_1
+      start_action_1:
+      - action: conversation.process
+        metadata: {}
+        data:
+          agent_id: conversation.google_generative_ai
+          text: 'Can you please send me a short, funny notification, in English, notifying
+            me of my next event which will start in 20 minutes: {{ state_attr(''calendar.family'',''message'')
+            }}, the event will start at {{ state_attr(''calendar.family'',''start_time'')
+            }} and end at {{ state_attr(''calendar.family'',''end_time'') }} and the
+            location will be at {{ state_attr(''calendar.family'',''location'') }}.
+            Be creative and funny.'
+      global_conditions: []
+- id: '1751970604783'
+  alias: Home Assistant - Run speed test at specific intervals
+  description: ''
+  triggers:
+  - hours: /6
+    trigger: time_pattern
+  conditions: []
+  actions:
+  - data:
+      entity_id:
+      - sensor.speedtest_download
+      - sensor.speedtest_upload
+      - sensor.speedtest_ping
+    action: homeassistant.update_entity
+  - wait_template: '{{ (as_timestamp(now()) - as_timestamp(states.sensor.speedtest_download.last_updated))
+      > 30 }}'
+    timeout: 00:00:35
+    continue_on_timeout: true
+  - data:
+      agent_id: conversation.google_generative_ai
+      text: 'Ok, the time is {{ states(''sensor.time'') }} and the internet speed
+        test had just been completed. The download speed has been measured as {{ states(''sensor.speedtest_download'')
+        | float | round(1) }} Mbit/s, the upload speed has been measured as {{ states(''sensor.speedtest_upload'')
+        | float | round(1) }} Mbit/s. The ping has been measured as {{ states(''sensor.speedtest_ping'')
+        | float | round(0) }} ms.
+
+
+        Can you please send me a short and funny notification summarising this (with
+        a pun or emoji)?'
+    action: conversation.process
+  mode: single
+- id: '1752009488828'
+  alias: Home Assistant - Reload Speed test integration when unavailable
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.speedtest_download
+    to: unavailable
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+    trigger: state
+  conditions: []
+  actions:
+  - data:
+      entry_id: 46adb66ffd9d7f877a14d54f5faa1075
+    action: homeassistant.reload_config_entry
+  mode: single
+- id: '1753058769027'
+  alias: Tesla Powerwall - Ensure Backup Reserve is 0%
+  description: Ensures Powerwall backup reserve is set to 0% with retry and notification
+  triggers:
+  - at: 05:45:00
+    trigger: time
+  - at: '13:59:45'
+    trigger: time
+  conditions: []
+  actions:
+  - variables:
+      max_attempts: 3
+      attempt: 1
+  - repeat:
+      while:
+      - condition: template
+        value_template: '{{ states(''number.the_abode_backup_reserve'')|int != 0 and
+          repeat.index <= max_attempts }}
+
+          '
+      sequence:
+      - data:
+          entity_id: number.the_abode_backup_reserve
+          value: 0
+        action: number.set_value
+      - delay: 00:00:10
+      - variables:
+          attempt: '{{ repeat.index }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ states(''number.the_abode_backup_reserve'')|int != 0 }}'
+      sequence:
+      - metadata: {}
+        data:
+          agent_id: conversation.google_generative_ai
+          text: "Failed to set the Tesla Powerwall battery backup reserve to 0% after
+            {{ attempt }} attempts.  \nCan you please send me a short notification
+            summarising this (with a pun or emoji)?"
+        action: conversation.process
+  mode: single
+- id: '1755343841565'
+  alias: Home Assistant - Send notification when garage door is left open
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id: cover.garage_door
+    to: 'on'
+    for:
+      minutes: 10
+  actions:
+  - action: conversation.process
+    metadata: {}
+    data:
+      text: Please send me a short, funny, can be a bit random notification to let
+        me know that the garage door has been open for ten minutes.
+      agent_id: conversation.qwen2_5_7b_instruct_q6_k
+- id: '1758238141585'
+  alias: Home Assistant - Calendar Notifications & Actions (Travel)
+  description: ''
+  use_blueprint:
+    path: Blackshome/calendar-notifications-and-actions.yaml
+    input:
+      calendar: calendar.travel
+      include_calendar_trigger: disable_key_word
+      start_calendar_offset:
+        hours: 0
+        minutes: -30
+        seconds: 0
+        days: 0
+      include_start_auto_actions:
+      - enable_start_action_1
+      start_action_1:
+      - action: conversation.process
+        metadata: {}
+        data:
+          agent_id: conversation.google_generative_ai
+          text: 'Ok, in 30 minutes, the following is happening per the Travel calendar
+            {{ state_attr(''calendar.travel'',''message'') }}, the event will start
+            at {{ state_attr(''calendar.travel'',''start_time'') }} and end at {{
+            state_attr(''calendar.travel'',''end_time'') }} and the location will
+            be at {{ state_attr(''calendar.travel'',''location'') }}
+
+
+            Can you please send me a notification notifying me of the event. Be creative
+            and funny.'
+      global_conditions: []
+- id: '1763897209297'
+  alias: Home Assistant - Automate Garage Light and notify when garage has been opened
+    or closed
+  description: Automatically manages garage lighting and security alerts. The lights
+    turn on when the door opens or if motion is detected after sunset. They turn off
+    10 minutes after the door closes (to give you time to unpack) or shortly after
+    the room is empty. Also sends a creative notification to your phone whenever the
+    door is opened or closed.
+  triggers:
+  - trigger: state
+    entity_id: cover.garage_door
+    from: closed
+    to: open
+    id: door_opened
+  - trigger: state
+    entity_id: cover.garage_door
+    from: open
+    to: closed
+    id: door_closed
+  - trigger: state
+    entity_id: binary_sensor.garage_presence_sensor
+    from: 'off'
+    to: 'on'
+    id: motion_detected
+  - trigger: state
+    entity_id: binary_sensor.garage_presence_sensor
+    from: 'on'
+    to: 'off'
+    id: motion_cleared
+  conditions: []
+  actions:
+  - if:
+    - condition: trigger
+      id:
+      - door_opened
+      - door_closed
+    then:
+    - action: conversation.process
+      data:
+        agent_id: conversation.qwen2_5_7b_instruct_q6_k
+        text: "Send a notification saying that the garage door has just been {{ trigger.to_state.state
+          }}  at {{ now().strftime('%H:%M') }}. Be creative and funny \U0001F923.\n\nCRITICAL
+          FORMATTING RULES:\n1. Write exactly ONE single paragraph.\n2. Do NOT use
+          headers, titles, or bold text (like **Alert**).\n3. Do NOT use line breaks
+          or newlines."
+        language: English
+  - choose:
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: cover.garage_door
+          state: open
+        - condition: state
+          entity_id: binary_sensor.garage_presence_sensor
+          state: 'on'
+      sequence:
+      - action: light.turn_on
+        target:
+          entity_id: light.garage_lights
+        data:
+          brightness_pct: 100
+    - conditions: []
+      sequence:
+      - choose:
+        - conditions:
+          - condition: trigger
+            id: door_closed
+          sequence:
+          - delay: 00:10:00
+        - conditions:
+          - condition: trigger
+            id: motion_cleared
+          sequence:
+          - delay: 00:00:30
+      - action: light.turn_off
+        target:
+          entity_id: light.garage_lights
+  mode: restart
+- id: '1765575963757'
+  alias: System - Ollama Keep Alive
+  description: Pings Ollama every 5 minutes to keep the model loaded in RAM.
+  triggers:
+  - minutes: /5
+    trigger: time_pattern
+  actions:
+  - data:
+      text: ping
+      agent_id: conversation.qwen2_5_7b_instruct_q6_k
+    response_variable: pong
+    action: conversation.process
+  mode: single
+- id: '1765576022902'
+  alias: System - Ollama Preload on Boot
+  description: Loads the model immediately when HA starts so the first command doesn't
+    timeout.
+  triggers:
+  - event: start
+    trigger: homeassistant
+  actions:
+  - delay: 00:00:30
+  - data:
+      text: System startup check. Respond with 'Online'.
+      agent_id: conversation.qwen2_5_7b_instruct_q6_k
+    action: conversation.process
+- id: '1766060729810'
+  alias: Home Assistant - HVAC Midnight Cooling
+  description: Switch AC to Cool mode and set to 24°C at midnight if temp is 26°C+
+    and someone is home
+  triggers:
+  - trigger: time
+    at: 00:00:00
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.home_weather_station_outdoor_temperature
+    above: 24.9
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: person.hendy
+      state: home
+    - condition: state
+      entity_id: person.mimi_ly
+      state: home
+  actions:
+  - action: climate.set_temperature
+    target:
+      entity_id: climate.daikinap22339
+    data:
+      temperature: 24
+      hvac_mode: cool
+  mode: single
+- id: '1767961952027'
+  alias: Home Assistant - Reload Philips Hue on Connectivity Issue
+  description: Automatically reloads the Hue integration if the Play light sensors
+    fail.
+  triggers:
+  - entity_id:
+    - sensor.hue_play_2_zigbee_connectivity
+    - sensor.hue_play_1_zigbee_connectivity
+    to:
+    - unavailable
+    - Connectivity issue
+    for:
+      seconds: 10
+    trigger: state
+  actions:
+  - data:
+      entry_id: 01KB3T6N523ZR0J9WPSXHZJ4ED
+    action: homeassistant.reload_config_entry
+  mode: single

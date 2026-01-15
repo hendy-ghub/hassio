@@ -1,0 +1,8 @@
+# Home Assistant files to ignore
+secrets.yaml
+.storage/
+*.db
+*.db-shm
+*.db-wal
+*.log
+home-assistant.log.*

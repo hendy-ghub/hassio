@@ -1,0 +1,163 @@
+ - name: tesla_display_name
+   state_topic: "teslamate/cars/2/display_name"
+   icon: mdi:car
+
+ - name: tesla_state
+   state_topic: "teslamate/cars/2/state"
+   icon: mdi:car-connected
+
+ - name: tesla_since
+   state_topic: "teslamate/cars/2/since"
+   device_class: timestamp
+   icon: mdi:clock-outline
+
+ - name: tesla_version
+   state_topic: "teslamate/cars/2/version"
+   icon: mdi:alphabetical
+
+ - name: tesla_update_version
+   state_topic: "teslamate/cars/2/update_version"
+   icon: mdi:alphabetical
+
+ - name: tesla_model
+   state_topic: "teslamate/cars/2/model"
+
+ - name: tesla_trim_badging
+   state_topic: "teslamate/cars/2/trim_badging"
+   icon: mdi:shield-star-outline
+
+ - name: tesla_exterior_color
+   state_topic: "teslamate/cars/2/exterior_color"
+   icon: mdi:palette
+
+ - name: tesla_wheel_type
+   state_topic: "teslamate/cars/2/wheel_type"
+
+ - name: tesla_spoiler_type
+   state_topic: "teslamate/cars/2/spoiler_type"
+   icon: mdi:car-sports
+
+ - name: tesla_geofence
+   state_topic: "teslamate/cars/2/geofence"
+   icon: mdi:earth
+
+ - name: tesla_latitude
+   state_topic: "teslamate/cars/2/latitude"
+   unit_of_measurement: °
+   icon: mdi:crosshairs-gps
+
+ - name: tesla_longitude
+   state_topic: "teslamate/cars/2/longitude"
+   unit_of_measurement: °
+   icon: mdi:crosshairs-gps
+
+ - name: tesla_shift_state
+   state_topic: "teslamate/cars/2/shift_state"
+   icon: mdi:car-shift-pattern
+
+ - name: tesla_power
+   state_topic: "teslamate/cars/2/power"
+   device_class: power
+   unit_of_measurement: kW
+   icon: mdi:flash
+
+ - name: tesla_speed
+   state_topic: "teslamate/cars/2/speed"
+   unit_of_measurement: "km/h"
+   icon: mdi:speedometer
+
+ - name: tesla_heading
+   state_topic: "teslamate/cars/2/heading"
+   unit_of_measurement: °
+   icon: mdi:compass
+
+ - name: tesla_elevation
+   state_topic: "teslamate/cars/2/elevation"
+   unit_of_measurement: m
+   icon: mdi:image-filter-hdr
+
+ - name: tesla_inside_temp
+   state_topic: "teslamate/cars/2/inside_temp"
+   device_class: temperature
+   unit_of_measurement: °C
+   icon: mdi:thermometer-lines
+
+ - name: tesla_outside_temp
+   state_topic: "teslamate/cars/2/outside_temp"
+   device_class: temperature
+   unit_of_measurement: °C
+   icon: mdi:thermometer-lines
+
+ - name: tesla_odometer
+   state_topic: "teslamate/cars/2/odometer"
+   unit_of_measurement: km
+   icon: mdi:counter
+
+ - name: tesla_est_battery_range_km
+   state_topic: "teslamate/cars/2/est_battery_range_km"
+   unit_of_measurement: km
+   icon: mdi:gauge
+
+ - name: tesla_rated_battery_range_km
+   state_topic: "teslamate/cars/2/rated_battery_range_km"
+   unit_of_measurement: km
+   icon: mdi:gauge
+
+ - name: tesla_ideal_battery_range_km
+   state_topic: "teslamate/cars/2/ideal_battery_range_km"
+   unit_of_measurement: km
+   icon: mdi:gauge
+
+ - name: tesla_battery_level
+   state_topic: "teslamate/cars/2/battery_level"
+   device_class: battery
+   unit_of_measurement: "%"
+   icon: mdi:battery-80
+   
+ - name: tesla_usable_battery_level
+   state_topic: "teslamate/cars/2/usable_battery_level"
+   unit_of_measurement: "%"
+   icon: mdi:battery-80
+
+ - name: tesla_charge_energy_added
+   state_topic: "teslamate/cars/2/charge_energy_added"
+   device_class: energy
+   unit_of_measurement: kWh
+   icon: mdi:battery-charging
+
+ - name: tesla_charge_limit_soc
+   state_topic: "teslamate/cars/2/charge_limit_soc"
+   unit_of_measurement: "%"
+   icon: mdi:battery-charging-100
+
+ - name: tesla_charger_actual_current
+   state_topic: "teslamate/cars/2/charger_actual_current"
+   device_class: current
+   unit_of_measurement: A
+   icon: mdi:lightning-bolt
+
+ - name: tesla_charger_phases
+   state_topic: "teslamate/cars/2/charger_phases"
+   icon: mdi:sine-wave
+
+ - name: tesla_charger_power
+   state_topic: "teslamate/cars/2/charger_power"
+   device_class: power
+   unit_of_measurement: kW
+   icon: mdi:lightning-bolt
+
+ - name: tesla_charger_voltage
+   state_topic: "teslamate/cars/2/charger_voltage"
+   device_class: voltage
+   unit_of_measurement: V
+   icon: mdi:lightning-bolt
+
+ - name: tesla_scheduled_charging_start_time
+   state_topic: "teslamate/cars/2/scheduled_charging_start_time"
+   device_class: timestamp
+   icon: mdi:clock-outline
+
+ - name: tesla_time_to_full_charge
+   state_topic: "teslamate/cars/2/time_to_full_charge"
+   unit_of_measurement: h
+   icon: mdi:clock-outline

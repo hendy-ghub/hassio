@@ -1,0 +1,30 @@
+- resource: https://speed.hendyo.me/api/v1/results/latest
+  headers:
+    Authorization: "Bearer PLVF1mNw77Nc7QbIwR2Lvyj2hNWYZ1jC44SMUU8La06949a1"
+  method: GET
+  scan_interval: 1200
+  sensor:
+    - name: "Speedtest Download"
+      # SRE GUARD: Adding this line prevents log errors if the API fails
+      availability: "{{ value_json is defined and value_json.data is defined }}"
+      value_template: "{{ value_json.data.download_bits }}"
+      device_class: data_rate
+      unit_of_measurement: "bit/s"
+      state_class: measurement
+      unique_id: "05d63adb-ac0d-4ab2-a8d3-6a176517c3d0"
+
+    - name: "Speedtest Upload"
+      availability: "{{ value_json is defined and value_json.data is defined }}"
+      value_template: "{{ value_json.data.upload_bits }}"
+      device_class: data_rate
+      unit_of_measurement: "bit/s"
+      state_class: measurement
+      unique_id: "74e2ef62-0a0b-4bb5-a54a-2a5ed59dbe76"
+
+    - name: "Speedtest Ping"
+      availability: "{{ value_json is defined and value_json.data is defined }}"
+      value_template: "{{ value_json.data.ping }}"
+      device_class: duration
+      unit_of_measurement: "ms"
+      state_class: measurement
+      unique_id: "a942a2f2-3b6c-433b-8c60-443f0973a7d8"

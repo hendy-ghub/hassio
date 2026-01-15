@@ -1,0 +1,252 @@
+{
+  "title": "AI Automation Suggester",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Выберите Провайдера ИИ",
+        "data": {
+          "provider": "Провайдер ИИ"
+        }
+      },
+      "openai": {
+        "title": "Настроить OpenAI",
+        "data": {
+          "openai_api_key": "Ключ API OpenAI",
+          "openai_model": "Модель OpenAI",
+          "openai_temperature": "Температура",
+          "max_input_tokens": "Максимальное количество входных токенов",
+          "max_output_tokens": "Максимальное количество выходных токенов"
+        }
+      },
+      "anthropic": {
+        "title": "Настроить Anthropic",
+        "data": {
+          "anthropic_api_key": "Ключ API Anthropic",
+          "anthropic_model": "Модель Anthropic",
+          "anthropic_temperature": "Температура",
+          "max_input_tokens": "Максимальное количество входных токенов",
+          "max_output_tokens": "Максимальное количество выходных токенов"
+        }
+      },
+      "google": {
+        "title": "Настроить Google",
+        "data": {
+          "google_api_key": "Ключ API Google",
+          "google_model": "Модель Google",
+          "google_temperature": "Температура",
+          "max_input_tokens": "Максимальное количество входных токенов",
+          "max_output_tokens": "Максимальное количество выходных токенов"
+        }
+      },
+      "groq": {
+        "title": "Настроить Groq",
+        "data": {
+          "groq_api_key": "Ключ API Groq",
+          "groq_model": "Модель Groq",
+          "groq_temperature": "Температура",
+          "max_input_tokens": "Максимальное количество входных токенов",
+          "max_output_tokens": "Максимальное количество выходных токенов"
+        }
+      },
+      "localai": {
+        "title": "Настроить LocalAI",
+        "data": {
+          "localai_ip": "IP-адрес LocalAI",
+          "localai_port": "Порт LocalAI",
+          "localai_https": "Использовать HTTPS для LocalAI",
+          "localai_model": "Модель LocalAI",
+          "localai_temperature": "Температура",
+          "max_input_tokens": "Максимальное количество входных токенов",
+          "max_output_tokens": "Максимальное количество выходных токенов"
+        }
+      },
+      "ollama": {
+        "title": "Настроить Ollama",
+        "data": {
+          "ollama_ip": "IP-адрес Ollama",
+          "ollama_port": "Порт Ollama",
+          "ollama_https": "Использовать HTTPS для Ollama",
+          "ollama_model": "Модель Ollama",
+          "ollama_temperature": "Температура",
+          "ollama_disable_think": "Отключить Режим Размышления (Ollama)",
+          "max_input_tokens": "Максимальное количество входных токенов",
+          "max_output_tokens": "Максимальное количество выходных токенов"
+        }
+      },
+      "custom_openai": {
+        "title": "Настроить Пользовательский OpenAI",
+        "data": {
+          "custom_openai_endpoint": "Пользовательский Endpoint OpenAI",
+          "custom_openai_api_key": "Пользовательский Ключ API OpenAI (Необязательно)",
+          "custom_openai_model": "Пользовательская Модель OpenAI",
+          "custom_openai_temperature": "Температура",
+          "max_input_tokens": "Максимальное количество входных токенов",
+          "max_output_tokens": "Максимальное количество выходных токенов"
+        }
+      },
+      "mistral": {
+        "title": "Настроить Mistral AI",
+        "data": {
+          "mistral_api_key": "Ключ API Mistral",
+          "mistral_model": "Модель Mistral",
+          "mistral_temperature": "Температура",
+          "max_input_tokens": "Максимальное количество входных токенов",
+          "max_output_tokens": "Максимальное количество выходных токенов"
+        }
+      },
+      "perplexity": {
+        "title": "Настроить Perplexity AI",
+        "data": {
+          "perplexity_api_key": "Ключ API Perplexity",
+          "perplexity_model": "Модель Perplexity",
+          "perplexity_temperature": "Температура",
+          "max_input_tokens": "Максимальное количество входных токенов",
+          "max_output_tokens": "Максимальное количество выходных токенов"
+        }
+      },
+      "openrouter": {
+        "title": "Настроить OpenRouter",
+        "data": {
+          "openrouter_api_key": "Ключ API OpenRouter",
+          "openrouter_model": "Модель OpenRouter",
+          "openrouter_reasoning_max_tokens": "Макс. Токенов для Размышлений OpenRouter",
+          "openrouter_temperature": "Температура",
+          "max_input_tokens": "Максимальное количество входных токенов",
+          "max_output_tokens": "Максимальное количество выходных токенов"
+        }
+      },
+      "openai_azure": {
+        "title": "Настройка OpenAI Azure",
+        "data": {
+          "openai_azure_api_key": "Ключ API Azure OpenAI",
+          "openai_azure_deployment_id": "ID развертывания Azure",
+          "openai_azure_endpoint": "Конечная точка Azure",
+          "openai_azure_api_version": "Версия API Azure",
+          "openai_azure_temperature": "Температура",
+          "max_input_tokens": "Максимальное количество входных токенов",
+          "max_output_tokens": "Максимальное количество выходных токенов"
+        }
+      },
+      "generic_openai": {
+        "title": "Настройка универсального OpenAI",
+        "data": {
+          "generic_openai_api_endpoint": "Полный URL-адрес API универсального OpenAI (должен заканчиваться на 'completions')",
+          "generic_openai_api_key": "Ключ API универсального OpenAI (опционально)",
+          "generic_openai_model": "Модель универсального OpenAI",
+          "generic_openai_temperature": "Температура",
+          "generic_openai_validation_endpoint": "URL-адрес для проверки (должен заканчиваться на 'models')",
+          "generic_openai_enable_validation": "Включить валидацию",
+          "max_input_tokens": "Максимальное количество входных токенов",
+          "max_output_tokens": "Максимальное количество выходных токенов"
+        }
+      }
+    },
+    "error": {
+      "api_error": "Ошибка проверки API: {error_message}",
+      "cannot_connect": "Не удалось подключиться. Проверьте настройки и сеть.",
+      "unknown": "Произошла неизвестная ошибка. Проверьте логи для получения подробной информации."
+    },
+    "abort": {
+      "already_configured": "Этот провайдер ИИ уже настроен. Вы можете отредактировать его на странице интеграций."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Настройки Советчика Автоматизаций с ИИ",
+        "data": {
+          "openai_api_key": "Ключ API OpenAI",
+          "openai_model": "Модель OpenAI",
+          "openai_temperature": "Температура (OpenAI)",
+          "anthropic_api_key": "Ключ API Anthropic",
+          "anthropic_model": "Модель Anthropic",
+          "anthropic_temperature": "Температура (Anthropic)",
+          "google_api_key": "Ключ API Google",
+          "google_model": "Модель Google",
+          "google_temperature": "Температура (Google)",
+          "groq_api_key": "Ключ API Groq",
+          "groq_model": "Модель Groq",
+          "groq_temperature": "Температура (Groq)",
+          "localai_ip": "IP-адрес LocalAI",
+          "localai_port": "Порт LocalAI",
+          "localai_https": "Использовать HTTPS для LocalAI",
+          "localai_model": "Модель LocalAI",
+          "localai_temperature": "Температура (LocalAI)",
+          "ollama_ip": "IP-адрес Ollama",
+          "ollama_port": "Порт Ollama",
+          "ollama_https": "Использовать HTTPS для Ollama",
+          "ollama_model": "Модель Ollama",
+          "ollama_temperature": "Температура (Ollama)",
+          "ollama_disable_think": "Отключить Режим Размышления (Ollama)",
+          "custom_openai_endpoint": "Пользовательский Endpoint OpenAI",
+          "custom_openai_api_key": "Пользовательский Ключ API OpenAI",
+          "custom_openai_model": "Пользовательская Модель OpenAI",
+          "custom_openai_temperature": "Температура (Пользовательский OpenAI)",
+          "mistral_api_key": "Ключ API Mistral",
+          "mistral_model": "Модель Mistral",
+          "mistral_temperature": "Температура (Mistral AI)",
+          "perplexity_api_key": "Ключ API Perplexity",
+          "perplexity_model": "Модель Perplexity",
+          "perplexity_temperature": "Температура (Perplexity AI)",
+          "openrouter_api_key": "Ключ API OpenRouter",
+          "openrouter_model": "Модель OpenRouter",
+          "openrouter_reasoning_max_tokens": "Макс. Токенов для Размышлений OpenRouter",
+          "openrouter_temperature": "Температура (OpenRouter)",
+          "openai_azure_api_key": "Ключ API Azure OpenAI",
+          "openai_azure_deployment_id": "ID Развертывания Azure",
+          "openai_azure_endpoint": "Endpoint Azure",
+          "openai_azure_api_version": "Версия API Azure",
+          "openai_azure_temperature": "Температура (OpenAI Azure)",
+          "generic_openai_api_endpoint": "Полный URL-адрес API для Общего OpenAI (должен заканчиваться на 'completions')",
+          "generic_openai_api_key": "Ключ API Общего OpenAI",
+          "generic_openai_model": "Модель Общего OpenAI",
+          "generic_openai_temperature": "Температура (Общий OpenAI)",
+          "generic_openai_validation_endpoint": "URL-адрес для проверки (Общий OpenAI, должен заканчиваться на 'models')",
+          "generic_openai_enable_validation": "Включить валидацию (Общий OpenAI)",
+          "max_input_tokens": "Максимальное количество входных токенов",
+          "max_output_tokens": "Максимальное количество выходных токенов"
+        },
+        "description": "Настройте параметры для ваших провайдеров ИИ. Будут использоваться только те поля, которые относятся к настроенному вами провайдеру. Общие параметры, такие как лимиты токенов, настраиваются для каждого провайдера."
+      }
+    },
+    "error": {
+      "invalid_input": "Одно или несколько значений недействительны."
+    }
+  },
+  "services": {
+    "generate_suggestions": {
+      "name": "Сгенерировать Предложения",
+      "description": "Вручную запустить генерацию предложений по автоматизации с ИИ.",
+      "fields": {
+        "provider_config": {
+          "name": "Конфигурация провайдера",
+          "description": "Какую конфигурацию провайдера использовать (если у вас несколько)"
+        },
+        "custom_prompt": {
+          "name": "Пользовательский запрос",
+          "description": "Необязательный пользовательский запрос для переопределения системного запроса по умолчанию или направления предложений к определённым темам."
+        },
+        "all_entities": {
+          "name": "Учитывать все сущности",
+          "description": "Если включено, учитываются все сущности, а не только новые."
+        },
+        "domains": {
+          "name": "Домены",
+          "description": "Список доменов для рассмотрения. Если пусто, учитываются все домены."
+        },
+        "entity_limit": {
+          "name": "Лимит сущностей",
+          "description": "Максимальное количество сущностей для рассмотрения (выбирается случайным образом)."
+        },
+        "automation_read_yaml": {
+          "name": "Прочитать файл 'automations.yaml'",
+          "description": "Читает и добавляет YAML-код автоматизаций, найденных в файле 'automations.yaml'. Это действие использует много входных токенов, используйте его с осторожностью и с моделями с большим окном контекста (например, Gemini)."
+        },
+        "automation_limit": {
+          "name": "Лимит автоматизаций",
+          "description": "Максимальное количество автоматизаций для анализа (по умолчанию: 100)."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,49 @@
+homeassistant: true
+advanced:
+  network_key:
+    - 180
+    - 22
+    - 229
+    - 65
+    - 116
+    - 213
+    - 205
+    - 182
+    - 62
+    - 86
+    - 232
+    - 119
+    - 78
+    - 94
+    - 153
+    - 239
+  pan_id: 45823
+  ext_pan_id:
+    - 82
+    - 21
+    - 209
+    - 85
+    - 66
+    - 75
+    - 240
+    - 119
+  homeassistant_legacy_entity_attributes: false
+  legacy_api: false
+  legacy_availability_payload: false
+mqtt:
+  server: mqtt://core-mosquitto:1883
+  user: addons
+  password: OR3ahd3Ahceezee3iaketoghi4geiL8aedeahah9niiphie4woo3Ulahyah9bia3
+frontend:
+  port: 8099
+serial:
+  port: /dev/ttyAMA1
+  adapter: ezsp
+  baudrate: 115200
+  rtscts: false
+device_options:
+  legacy: false
+permit_join: true
+devices:
+  '0xa4c138c9cb6812e5':
+    friendly_name: Home Office Presence Sensor

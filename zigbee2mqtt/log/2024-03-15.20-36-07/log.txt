@@ -1,0 +1,15 @@
+info  2024-03-15 20:36:07: Logging to console and directory: '/config/zigbee2mqtt/log/2024-03-15.20-36-07' filename: log.txt
+info  2024-03-15 20:36:07: Starting Zigbee2MQTT version 1.36.0 (commit #unknown)
+info  2024-03-15 20:36:07: Starting zigbee-herdsman (0.35.1)
+error 2024-03-15 20:36:26: Error while starting zigbee-herdsman
+error 2024-03-15 20:36:26: Failed to start zigbee
+error 2024-03-15 20:36:26: Check https://www.zigbee2mqtt.io/guide/installation/20_zigbee2mqtt-fails-to-start.html for possible solutions
+error 2024-03-15 20:36:26: Exiting...
+error 2024-03-15 20:36:26: Error: Failure send getEui64:{"type":"Buffer","data":[27,0,1,38,0]}
+    at /app/node_modules/zigbee-herdsman/src/adapter/ezsp/driver/ezsp.ts:664:23
+    at Queue.execute (/app/node_modules/zigbee-herdsman/src/utils/queue.ts:35:20)
+    at Driver.startup (/app/node_modules/zigbee-herdsman/src/adapter/ezsp/driver/driver.ts:243:23)
+    at Controller.start (/app/node_modules/zigbee-herdsman/src/controller/controller.ts:132:29)
+    at Zigbee.start (/app/lib/zigbee.ts:62:27)
+    at Controller.start (/app/lib/controller.ts:109:27)
+    at start (/app/index.js:107:5)

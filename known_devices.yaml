@@ -1,0 +1,13 @@
+tesla_location:
+  unique_id: e3012f19e6a14a06baa3e20a7e6ed47c
+  name: Baymax
+  mac:
+  icon: mdi:car
+  picture:
+  track: true
+tesla_location:
+  name: tesla_location
+  mac:
+  icon:
+  picture:
+  track: true

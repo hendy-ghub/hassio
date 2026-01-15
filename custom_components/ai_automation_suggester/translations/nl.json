@@ -1,0 +1,252 @@
+{
+  "title": "AI Automation Suggester",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Selecteer AI Provider",
+        "data": {
+          "provider": "AI Provider"
+        }
+      },
+      "openai": {
+        "title": "Configureer OpenAI",
+        "data": {
+          "openai_api_key": "OpenAI API-sleutel",
+          "openai_model": "OpenAI Model",
+          "openai_temperature": "Temperatuur",
+          "max_input_tokens": "Maximaal aantal invoertokens",
+          "max_output_tokens": "Maximaal aantal uitvoertokens"
+        }
+      },
+      "anthropic": {
+        "title": "Configureer Anthropic",
+        "data": {
+          "anthropic_api_key": "Anthropic API-sleutel",
+          "anthropic_model": "Anthropic Model",
+          "anthropic_temperature": "Temperatuur",
+          "max_input_tokens": "Maximaal aantal invoertokens",
+          "max_output_tokens": "Maximaal aantal uitvoertokens"
+        }
+      },
+      "google": {
+        "title": "Configureer Google",
+        "data": {
+          "google_api_key": "Google API-sleutel",
+          "google_model": "Google Model",
+          "google_temperature": "Temperatuur",
+          "max_input_tokens": "Maximaal aantal invoertokens",
+          "max_output_tokens": "Maximaal aantal uitvoertokens"
+        }
+      },
+      "groq": {
+        "title": "Configureer Groq",
+        "data": {
+          "groq_api_key": "Groq API-sleutel",
+          "groq_model": "Groq Model",
+          "groq_temperature": "Temperatuur",
+          "max_input_tokens": "Maximaal aantal invoertokens",
+          "max_output_tokens": "Maximaal aantal uitvoertokens"
+        }
+      },
+      "localai": {
+        "title": "Configureer LocalAI",
+        "data": {
+          "localai_ip": "LocalAI IP-adres",
+          "localai_port": "LocalAI Poort",
+          "localai_https": "Gebruik HTTPS voor LocalAI",
+          "localai_model": "LocalAI Model",
+          "localai_temperature": "Temperatuur",
+          "max_input_tokens": "Maximaal aantal invoertokens",
+          "max_output_tokens": "Maximaal aantal uitvoertokens"
+        }
+      },
+      "ollama": {
+        "title": "Configureer Ollama",
+        "data": {
+          "ollama_ip": "Ollama IP-adres",
+          "ollama_port": "Ollama Poort",
+          "ollama_https": "Gebruik HTTPS voor Ollama",
+          "ollama_model": "Ollama Model",
+          "ollama_temperature": "Temperatuur",
+          "ollama_disable_think": "Denkmodus uitschakelen (Ollama)",
+          "max_input_tokens": "Maximaal aantal invoertokens",
+          "max_output_tokens": "Maximaal aantal uitvoertokens"
+        }
+      },
+      "custom_openai": {
+        "title": "Configureer Aangepaste OpenAI",
+        "data": {
+          "custom_openai_endpoint": "Aangepast OpenAI Eindpunt",
+          "custom_openai_api_key": "Aangepaste OpenAI API-sleutel (Optioneel)",
+          "custom_openai_model": "Aangepast OpenAI Model",
+          "custom_openai_temperature": "Temperatuur",
+          "max_input_tokens": "Maximaal aantal invoertokens",
+          "max_output_tokens": "Maximaal aantal uitvoertokens"
+        }
+      },
+      "mistral": {
+        "title": "Configureer Mistral AI",
+        "data": {
+          "mistral_api_key": "Mistral API-sleutel",
+          "mistral_model": "Mistral Model",
+          "mistral_temperature": "Temperatuur",
+          "max_input_tokens": "Maximaal aantal invoertokens",
+          "max_output_tokens": "Maximaal aantal uitvoertokens"
+        }
+      },
+      "perplexity": {
+        "title": "Configureer Perplexity AI",
+        "data": {
+          "perplexity_api_key": "Perplexity API-sleutel",
+          "perplexity_model": "Perplexity Model",
+          "perplexity_temperature": "Temperatuur",
+          "max_input_tokens": "Maximaal aantal invoertokens",
+          "max_output_tokens": "Maximaal aantal uitvoertokens"
+        }
+      },
+      "openrouter": {
+        "title": "Configureer OpenRouter",
+        "data": {
+          "openrouter_api_key": "OpenRouter API-sleutel",
+          "openrouter_model": "OpenRouter Model",
+          "openrouter_reasoning_max_tokens": "OpenRouter Redenering Max Tokens",
+          "openrouter_temperature": "Temperatuur",
+          "max_input_tokens": "Maximaal aantal invoertokens",
+          "max_output_tokens": "Maximaal aantal uitvoertokens"
+        }
+      },
+      "openai_azure": {
+        "title": "Configureer OpenAI Azure",
+        "data": {
+          "openai_azure_api_key": "Azure OpenAI API-sleutel",
+          "openai_azure_deployment_id": "Azure Implementatie-ID",
+          "openai_azure_endpoint": "Azure Endpoint",
+          "openai_azure_api_version": "Azure API-versie",
+          "openai_azure_temperature": "Temperatuur",
+          "max_input_tokens": "Maximaal aantal invoertokens",
+          "max_output_tokens": "Maximaal aantal uitvoertokens"
+        }
+      },
+      "generic_openai": {
+        "title": "Configureer Generieke OpenAI",
+        "data": {
+          "generic_openai_api_endpoint": "Volledige API-URL voor generieke OpenAI (moet eindigen op 'completions')",
+          "generic_openai_api_key": "Generieke OpenAI API-sleutel (Optioneel)",
+          "generic_openai_model": "Generiek OpenAI Model",
+          "generic_openai_temperature": "Temperatuur",
+          "generic_openai_validation_endpoint": "Validatie-URL (moet eindigen op 'models')",
+          "generic_openai_enable_validation": "Validatie Inschakelen",
+          "max_input_tokens": "Maximaal aantal invoertokens",
+          "max_output_tokens": "Maximaal aantal uitvoertokens"
+        }
+      }
+    },
+    "error": {
+      "api_error": "API-validatie mislukt: {error_message}",
+      "cannot_connect": "Verbinding mislukt. Controleer uw instellingen en netwerk.",
+      "unknown": "Er is een onbekende fout opgetreden. Controleer de logs voor details."
+    },
+    "abort": {
+      "already_configured": "Deze AI-provider is al geconfigureerd. U kunt deze bewerken via de integratiepagina."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "AI Automatisering Suggester Opties",
+        "data": {
+          "openai_api_key": "OpenAI API-sleutel",
+          "openai_model": "OpenAI Model",
+          "openai_temperature": "Temperatuur (OpenAI)",
+          "anthropic_api_key": "Anthropic API-sleutel",
+          "anthropic_model": "Anthropic Model",
+          "anthropic_temperature": "Temperatuur (Anthropic)",
+          "google_api_key": "Google API-sleutel",
+          "google_model": "Google Model",
+          "google_temperature": "Temperatuur (Google)",
+          "groq_api_key": "Groq API-sleutel",
+          "groq_model": "Groq Model",
+          "groq_temperature": "Temperatuur (Groq)",
+          "localai_ip": "LocalAI IP-adres",
+          "localai_port": "LocalAI Poort",
+          "localai_https": "Gebruik HTTPS voor LocalAI",
+          "localai_model": "LocalAI Model",
+          "localai_temperature": "Temperatuur (LocalAI)",
+          "ollama_ip": "Ollama IP-adres",
+          "ollama_port": "Ollama Poort",
+          "ollama_https": "Gebruik HTTPS voor Ollama",
+          "ollama_model": "Ollama Model",
+          "ollama_temperature": "Temperatuur (Ollama)",
+          "ollama_disable_think": "Denkmodus uitschakelen (Ollama)",
+          "custom_openai_endpoint": "Aangepast OpenAI Eindpunt",
+          "custom_openai_api_key": "Aangepaste OpenAI API-sleutel",
+          "custom_openai_model": "Aangepast OpenAI Model",
+          "custom_openai_temperature": "Temperatuur (Aangepaste OpenAI)",
+          "mistral_api_key": "Mistral API-sleutel",
+          "mistral_model": "Mistral Model",
+          "mistral_temperature": "Temperatuur (Mistral AI)",
+          "perplexity_api_key": "Perplexity API-sleutel",
+          "perplexity_model": "Perplexity Model",
+          "perplexity_temperature": "Temperatuur (Perplexity AI)",
+          "openrouter_api_key": "OpenRouter API-sleutel",
+          "openrouter_model": "OpenRouter Model",
+          "openrouter_reasoning_max_tokens": "OpenRouter Redenering Max Tokens",
+          "openrouter_temperature": "Temperatuur (OpenRouter)",
+          "openai_azure_api_key": "Azure OpenAI API-sleutel",
+          "openai_azure_deployment_id": "Azure Implementatie-ID",
+          "openai_azure_endpoint": "Azure Eindpunt",
+          "openai_azure_api_version": "Azure API Versie",
+          "openai_azure_temperature": "Temperatuur (OpenAI Azure)",
+          "generic_openai_api_endpoint": "Volledige API-URL voor generieke OpenAI (moet eindigen op 'completions')",
+          "generic_openai_api_key": "Generieke OpenAI API-sleutel",
+          "generic_openai_model": "Generiek OpenAI-model",
+          "generic_openai_temperature": "Temperatuur (Generieke OpenAI)",
+          "generic_openai_validation_endpoint": "Validatie-URL (Generieke OpenAI, moet eindigen op 'models')",
+          "generic_openai_enable_validation": "Validatie Inschakelen (Generieke OpenAI)",
+          "max_input_tokens": "Maximaal aantal invoertokens",
+          "max_output_tokens": "Maximaal aantal uitvoertokens"
+        },
+        "description": "Pas de instellingen voor uw AI-providers aan. Alleen de velden die relevant zijn voor uw geconfigureerde provider worden gebruikt. Algemene instellingen zoals tokenlimieten worden per provider geconfigureerd."
+      }
+    },
+    "error": {
+      "invalid_input": "Een of meer waarden zijn ongeldig."
+    }
+  },
+  "services": {
+    "generate_suggestions": {
+      "name": "Suggesties Genereren",
+      "description": "Handmatig AI-automatiseringssuggesties activeren.",
+      "fields": {
+        "provider_config": {
+          "name": "Aanbiederconfiguratie",
+          "description": "Welke aanbiederconfiguratie moet worden gebruikt (indien er meerdere zijn)?"
+        },
+        "custom_prompt": {
+          "name": "Aangepaste Prompt",
+          "description": "Optionele aangepaste prompt om de standaardsysteemprompt te overschrijven of de suggesties naar specifieke thema's te leiden."
+        },
+        "all_entities": {
+          "name": "Alle Entiteiten Beschouwen",
+          "description": "Indien waar, worden alle entiteiten in overweging genomen in plaats van alleen nieuwe entiteiten."
+        },
+        "domains": {
+          "name": "Domeinen",
+          "description": "Lijst met te beschouwen domeinen. Als deze leeg is, worden alle domeinen beschouwd."
+        },
+        "entity_limit": {
+          "name": "Entiteitenlimiet",
+          "description": "Maximaal aantal te beschouwen entiteiten (willekeurig geselecteerd)."
+        },
+        "automation_read_yaml": {
+          "name": "Lees 'automations.yaml' bestand",
+          "description": "Leest en voegt de YAML-code van de automatiseringen uit het 'automations.yaml'-bestand toe. Deze actie verbruikt veel invoertokens, gebruik deze voorzichtig en met modellen met een groot contextvenster (bijv. Gemini)."
+        },
+        "automation_limit": {
+          "name": "Automatiseringslimiet",
+          "description": "Maximum aantal te analyseren automatiseringen (standaard: 100)."
+        }
+      }
+    }
+  }
+}

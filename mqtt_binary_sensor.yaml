@@ -1,0 +1,84 @@
+ - name: tesla_healthy
+   state_topic: "teslamate/cars/2/healthy"
+   payload_on: "true"
+   payload_off: "false"
+   icon: mdi:heart-pulse
+
+ - name: tesla_update_available
+   state_topic: "teslamate/cars/2/update_available"
+   payload_on: "true"
+   payload_off: "false"
+   icon: mdi:alarm
+ 
+ - name: tesla_locked
+   device_class: lock
+   state_topic: "teslamate/cars/2/locked"
+   payload_on: "false"
+   payload_off: "true"
+
+ - name: tesla_sentry_mode
+   state_topic: "teslamate/cars/2/sentry_mode"
+   payload_on: "true"
+   payload_off: "false"
+   icon: mdi:cctv
+
+ - name: tesla_windows_open
+   device_class: window
+   state_topic: "teslamate/cars/2/windows_open"
+   payload_on: "true"
+   payload_off: "false"
+   icon: mdi:car-door
+
+ - name: tesla_doors_open
+   device_class: door
+   state_topic: "teslamate/cars/2/doors_open"
+   payload_on: "true"
+   payload_off: "false"
+   icon: mdi:car-door
+
+ - name: tesla_trunk_open
+   device_class: opening
+   state_topic: "teslamate/cars/2/trunk_open"
+   payload_on: "true"
+   payload_off: "false"
+   icon: mdi:car-side
+
+ - name: tesla_frunk_open
+   device_class: opening
+   state_topic: "teslamate/cars/2/frunk_open"
+   payload_on: "true"
+   payload_off: "false"
+   icon: mdi:car-side
+
+ - name: tesla_is_user_present
+   device_class: presence
+   state_topic: "teslamate/cars/2/is_user_present"
+   payload_on: "true"
+   payload_off: "false"
+   icon: mdi:human-greeting
+
+ - name: tesla_is_climate_on
+   state_topic: "teslamate/cars/2/is_climate_on"
+   payload_on: "true"
+   payload_off: "false"
+   icon: mdi:fan
+
+ - name: tesla_is_preconditioning
+   state_topic: "teslamate/cars/2/is_preconditioning"
+   payload_on: "true"
+   payload_off: "false"
+   icon: mdi:fan
+
+ - name: tesla_plugged_in
+   device_class: plug
+   state_topic: "teslamate/cars/2/plugged_in"
+   payload_on: "true"
+   payload_off: "false"
+   icon: mdi:ev-station
+
+ - name: tesla_charge_port_door_open
+   device_class: opening
+   state_topic: "teslamate/cars/2/charge_port_door_open"
+   payload_on: "true"
+   payload_off: "false"
+   icon: mdi:ev-plug-tesla
