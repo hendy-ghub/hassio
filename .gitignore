@@ -8,3 +8,5 @@ secrets.yaml
 home-assistant.log.*
 # not syncing the custom_components folder to GitHub.
 custom_components/
+solcast_solar/
+*.mp3tts

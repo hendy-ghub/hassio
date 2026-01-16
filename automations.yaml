@@ -712,58 +712,49 @@
   mode: single
 - id: '1709537176468'
   alias: Home Assistant - Turn on TV LED strip when TV turns on
-  description: ''
-  trigger:
-  - platform: state
-    entity_id:
-    - switch.wake_up_tv
-    to: 'on'
-    enabled: true
+  description: Brightens LED strip to 75% when LG TV turns on
+  triggers:
+  - trigger: state
+    entity_id: media_player.lg_tv
     from: 'off'
-  - platform: numeric_state
-    entity_id:
-    - sensor.living_room_tv_current_consumption
+    to: 'on'
+  - trigger: numeric_state
+    entity_id: sensor.living_room_tv_current_consumption
     above: 50
-  condition: []
-  action:
-  - type: turn_on
-    device_id: 0e5b105dbeed9ae9975a68fc80278dfb
-    entity_id: a1d8a33937de545c50cf0ca0cab7de35
-    domain: light
-    brightness_pct: 75
+  actions:
+  - target:
+      entity_id: light.tv_led_strip
+    data:
+      brightness_pct: 75
+    action: light.turn_on
   mode: single
 - id: '1709537557413'
   alias: Home Assistant - Turn off or dim TV LED strip when TV is turned off
-  description: ''
-  trigger:
-  - platform: state
-    entity_id:
-    - switch.wake_up_tv
-    to: 'off'
-    enabled: true
+  description: Dims to 10% at night or turns off during the day when TV stops
+  triggers:
+  - trigger: state
+    entity_id: media_player.lg_tv
     from: 'on'
-  - platform: numeric_state
-    entity_id:
-    - sensor.living_room_tv_current_consumption
+    to: 'off'
+  - trigger: numeric_state
+    entity_id: sensor.living_room_tv_current_consumption
     below: 50
-  condition: []
-  action:
+  actions:
   - if:
     - condition: sun
       before: sunset
       after: sunrise
       before_offset: -00:45:00
     then:
-    - type: turn_off
-      device_id: 0e5b105dbeed9ae9975a68fc80278dfb
-      entity_id: a1d8a33937de545c50cf0ca0cab7de35
-      domain: light
+    - target:
+        entity_id: light.tv_led_strip
+      action: light.turn_off
     else:
-    - type: turn_on
-      device_id: 0e5b105dbeed9ae9975a68fc80278dfb
-      entity_id: a1d8a33937de545c50cf0ca0cab7de35
-      domain: light
-      brightness_pct: 10
+    - target:
+        entity_id: light.tv_led_strip
+      data:
+        brightness_pct: 10
+      action: light.turn_on
   mode: single
 - id: '1709715830504'
   alias: Home Assistant - Switch D/S Living Room light on based on occupancy
@@ -1061,17 +1052,18 @@
     data: {}
   mode: single
 - id: '1728505641058'
-  alias: Amber - Reload integration when stale
-  description: ''
+  alias: Home Assistant - Reload Amber integration when stale
+  description: Reloads the Amber integration if the data hasn't updated in 15 minutes.
   triggers:
-  - value_template: '{{ (as_timestamp(now())-as_timestamp(states.sensor[''amber_feed_in_price''].last_updated))/60
-      > 15 }}'
-    trigger: template
+  - trigger: template
+    value_template: "{% set sensor = states.sensor['amber_feed_in_price'] %} {{ (as_timestamp(now())
+      - as_timestamp(sensor.last_updated)) / 60 > 15 \n   if sensor is not none else
+      false }}\n"
   conditions: []
   actions:
-  - metadata: {}
+  - action: homeassistant.reload_config_entry
+    metadata: {}
     data: {}
-    action: homeassistant.reload_config_entry
     target:
       entity_id: sensor.home_feed_in_price
   mode: single
