@@ -10,3 +10,4 @@ home-assistant.log.*
 custom_components/
 solcast_solar/
 *.mp3tts
+.cloud/production_auth.json
