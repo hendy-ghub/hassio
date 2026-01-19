@@ -13,3 +13,16 @@ solcast_solar/
 .cloud/production_auth.json
 .ha_run.lock
 .HA_VERSION
+# macOS System Files
+.DS_Store
+# VS Code Settings
+.vscode/
+# Editor temporary files
+*.swp
+*~
+# Backups and Large Media
+backups/
+media/
+# Z-Wave/Zigbee specific logs
+OZW_Log.txt
+pyozw.sqlite
