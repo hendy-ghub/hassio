@@ -47,7 +47,6 @@ recorder:
       # 1. Collapse all Video Queues (Frontyard, Backyard, etc.)
       - sensor.*_video_queue_size
       # 2. Collapse all System Uptimes (UniFi, Dream Machine, TrueNAS)
-      - sensor.*_uptime
       - sensor.ups*_runtime_friendly
       # 3. Collapse Personal Tracking/Device metadata
       - sensor.*_next_update
@@ -58,8 +57,6 @@ recorder:
       - sensor.idiot*
       - sensor.qbittorrent*
       # 4. Collapse Integration-specific noise
-      - sensor.baymax_*
-      - sensor.camera_*
       - binary_sensor.truenas_apps_*
       - automation.home_assistant_switch_*
       - button.tv_led_strip_*
